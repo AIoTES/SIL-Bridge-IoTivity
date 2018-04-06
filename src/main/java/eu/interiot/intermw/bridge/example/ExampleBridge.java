@@ -13,24 +13,18 @@
 package eu.interiot.intermw.bridge.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import eu.interiot.intermw.bridge.abstracts.AbstractBridge;
 import eu.interiot.intermw.bridge.exceptions.BridgeException;
-import eu.interiot.intermw.comm.broker.exceptions.BrokerException;
 import eu.interiot.intermw.commons.exceptions.MiddlewareException;
-import eu.interiot.intermw.commons.exceptions.UnknownActionException;
-import eu.interiot.intermw.commons.exceptions.UnsupportedActionException;
 import eu.interiot.intermw.commons.interfaces.Configuration;
 import eu.interiot.intermw.commons.model.Platform;
-import eu.interiot.intermw.commons.model.SubscriptionId;
-import eu.interiot.message.EntityID;
+import eu.interiot.message.ID.EntityID;
 import eu.interiot.message.Message;
 import eu.interiot.message.MessageMetadata;
 import eu.interiot.message.MessagePayload;
-import eu.interiot.message.URI.URIManagerMessageMetadata;
-import eu.interiot.message.exceptions.MessageException;
 import eu.interiot.message.exceptions.payload.PayloadException;
-import eu.interiot.message.metaTypes.PlatformMessageMetadata;
+import eu.interiot.message.managers.URI.URIManagerMessageMetadata;
+import eu.interiot.message.metadata.PlatformMessageMetadata;
 import eu.interiot.message.utils.INTERMWDemoUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -58,31 +52,13 @@ import java.util.Set;
 @eu.interiot.intermw.bridge.annotations.Bridge(platformType = "ExamplePlatform")
 public class ExampleBridge extends AbstractBridge {
     private final Logger logger = LoggerFactory.getLogger(ExampleBridge.class);
-    private URL bridgeCallbackUrl;
-    private String exampleUser;
-    private String examplePassword;
     private HttpClient httpClient;
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     public ExampleBridge(Configuration configuration, Platform platform) throws MiddlewareException {
         super(configuration, platform);
         logger.debug("Example bridge is initializing...");
         Properties properties = configuration.getProperties();
-
-        try {
-            bridgeCallbackUrl = new URL(configuration.getProperty("bridge.callback.address"));
-            exampleUser = properties.getProperty("example.user");
-            examplePassword = properties.getProperty("example.password");
-
-        } catch (Exception e) {
-            throw new BridgeException("Failed to read Example bridge configuration: " + e.getMessage());
-        }
-
-        if (bridgeCallbackUrl == null ||
-                Strings.isNullOrEmpty(exampleUser) ||
-                Strings.isNullOrEmpty(examplePassword)) {
-            throw new BridgeException("Invalid Example bridge configuration.");
-        }
 
         httpClient = HttpClientBuilder.create().build();
         objectMapper = new ObjectMapper();
@@ -91,137 +67,49 @@ public class ExampleBridge extends AbstractBridge {
     }
 
     @Override
-    public void send(Message message) throws BridgeException {
-        Set<URIManagerMessageMetadata.MessageTypesEnum> messageTypesEnumSet = message.getMetadata().getMessageTypes();
-        try {
-            if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_REGISTER)) {
-                // When  registering a new platform (an instance of Example platform), a new ExampleBridge instance is created.
-                // After that, the bridge receives corresponding PLATFORM_REGISTER message which was translated by IPSM to do any further processing.
-                Set<String> entityIDs = INTERMWDemoUtils.getEntityIDsFromPayload(
-                        message.getPayload(), INTERMWDemoUtils.EntityTypePlatform);
-                if (entityIDs.size() != 1) {
-                    throw new BridgeException("Missing platform ID.");
-                }
-
-                registerPlatform(entityIDs.iterator().next());
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_UNREGISTER)) {
-                Set<String> entityIDs = INTERMWDemoUtils.getEntityIDsFromPayload(
-                        message.getPayload(), INTERMWDemoUtils.EntityTypePlatform);
-                if (entityIDs.size() != 1) {
-                    throw new BridgeException("Missing platform ID.");
-                }
-
-                unregisterPlatform(entityIDs.iterator().next());
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.THING_REGISTER)) {
-                Set<String> entityIds = INTERMWDemoUtils.getEntityIDsFromPayload(message.getPayload(),
-                        INTERMWDemoUtils.EntityTypeDevice);
-
-                for (String entityId : entityIds) {
-                    registerThing(entityId);
-                }
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.THING_UNREGISTER)) {
-                Set<String> entityIds = INTERMWDemoUtils.getEntityIDsFromPayload(message.getPayload(),
-                        INTERMWDemoUtils.EntityTypeDevice);
-                for (String entityId : entityIds) {
-                    unregisterThing(entityId);
-                }
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.THING_UPDATE)) {
-                if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.OBSERVATION)) {
-                    Set<String> entities = INTERMWDemoUtils.getEntityIDsFromPayload(message.getPayload(),
-                            INTERMWDemoUtils.EntityTypeDevice);
-                    if (entities.isEmpty()) {
-                        throw new BridgeException("No entities of type Device found in the Payload.");
-                    }
-                    String entity = entities.iterator().next();
-                    updateThing(entity, message);
-                }
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY)) {
-                throw new UnsupportedActionException("QUERY operation is currently not supported.");
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.SUBSCRIBE)) {
-                Set<String> entities = INTERMWDemoUtils.getEntityIDsFromPayload(message.getPayload(),
-                        INTERMWDemoUtils.EntityTypeDevice);
-                if (entities.isEmpty()) {
-                    throw new PayloadException("No entities of type Device found in the Payload.");
-                } else if (entities.size() > 1) {
-                    throw new PayloadException("Only one device is supported by Subscribe operation.");
-                }
-
-                String entity = entities.iterator().next();
-                subscribe(entity, message.getMetadata().getConversationId().get());
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.UNSUBSCRIBE)) {
-                String conversationID = message.getMetadata().getConversationId().get();
-                unsubscribe(new SubscriptionId(conversationID));
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DISCOVERY)) {
-                throw new UnsupportedActionException("The DISCOVERY operation is currently not supported.");
-
-            } else if (messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.UNRECOGNIZED)) {
-                throw new UnknownActionException(String.format(
-                        "The action is labelled as UNRECOGNIZED and thus is unprocessable by component %s in platform %s.",
-                        this.getClass().getName(), platform.getId().getId()));
-            } else {
-                throw new UnknownActionException(String.format(
-                        "The message type is not properly handled and can't be processed by component %s in platform %s.",
-                        this.getClass().getName(), platform.getId().getId()));
-            }
-
-            Message responseMessage = createResponseMessage(message);
-            try {
-                publisher.publish(responseMessage);
-            } catch (BrokerException e) {
-                throw new MessageException("Failed to publish response message: " + e.getMessage(), e);
-            }
-
-        } catch (Exception e) {
-            logger.error("Failed to process request: " + e.getMessage(), e);
-            throw new BridgeException("Example bridge failed to process request: " + e.getMessage(), e);
+    public Message registerPlatform(Message message) throws Exception {
+        Set<String> entityIDs = INTERMWDemoUtils.getEntityIDsFromPayload(
+                message.getPayload(), INTERMWDemoUtils.EntityTypePlatform);
+        if (entityIDs.size() != 1) {
+            throw new BridgeException("Missing platform ID.");
         }
-    }
-
-    private void registerPlatform(String platformId) {
+        String platformId = entityIDs.iterator().next();
         logger.debug("Registering platform {}...", platformId);
-        logger.debug("Platform {} has been registered.", platformId);
+        return createResponseMessage(message);
     }
 
-    private void unregisterPlatform(String platformId) {
+    @Override
+    public Message unregisterPlatform(Message message) throws Exception {
+        Set<String> entityIDs = INTERMWDemoUtils.getEntityIDsFromPayload(
+                message.getPayload(), INTERMWDemoUtils.EntityTypePlatform);
+        if (entityIDs.size() != 1) {
+            throw new BridgeException("Missing platform ID.");
+        }
+        String platformId = entityIDs.iterator().next();
         logger.debug("Unregistering platform {}...", platformId);
+        return createResponseMessage(message);
     }
 
-    private void registerThing(String entityId) throws Exception {
-        logger.debug("Registering thing {}...", entityId);
-        HttpPost httpPost = new HttpPost(platform.getBaseURL() + "/things/register");
-        Map<String, Object> data = new HashMap<>();
-        data.put("thingId", entityId);
-        String json = objectMapper.writeValueAsString(data);
-        HttpEntity httpEntity = new StringEntity(json, ContentType.APPLICATION_JSON);
-        httpPost.setEntity(httpEntity);
-        HttpResponse response = httpClient.execute(httpPost);
-        logger.debug("Received response from the platform: {}", response.getStatusLine());
-    }
+    @Override
+    public Message subscribe(Message message) throws Exception {
+        Set<String> entities = INTERMWDemoUtils.getEntityIDsFromPayload(message.getPayload(),
+                INTERMWDemoUtils.EntityTypeDevice);
+        if (entities.isEmpty()) {
+            throw new PayloadException("No entities of type Device found in the Payload.");
+        } else if (entities.size() > 1) {
+            throw new PayloadException("Only one device is supported by Subscribe operation.");
+        }
 
-    private void unregisterThing(String entityId) {
-        logger.debug("Unregistering thing {}...", entityId);
-    }
+        String thingId = entities.iterator().next();
+        String conversationId = message.getMetadata().getConversationId().orElse(null);
 
-    private void updateThing(String entityId, Message message) {
-        logger.debug("Updating thing {}...", entityId);
-    }
-
-    private void subscribe(String entityId, String conversationId) throws Exception {
-        logger.debug("Subscribing to thing {} using conversationId {}...", entityId, conversationId);
+        logger.debug("Subscribing to thing {} using conversationId {}...", thingId, conversationId);
 
         URL callbackUrl = new URL(bridgeCallbackUrl, conversationId);
 
         HttpPost httpPost = new HttpPost(platform.getBaseURL() + "/things/subscribe");
         Map<String, Object> data = new HashMap<>();
-        data.put("thingId", entityId);
+        data.put("thingId", thingId);
         data.put("conversationId", conversationId);
         data.put("callbackUrl", callbackUrl.toString());
         String json = objectMapper.writeValueAsString(data);
@@ -256,10 +144,59 @@ public class ExampleBridge extends AbstractBridge {
             response.status(204);
             return "";
         });
-        logger.debug("Successfully subscribed to thing {}.", entityId);
+        logger.debug("Successfully subscribed to thing {}.", thingId);
+        return createResponseMessage(message);
     }
 
-    private void unsubscribe(SubscriptionId subscriptionId) {
-        logger.debug("Unsubscribing from thing {}...", subscriptionId.getId());
+    @Override
+    public Message unsubscribe(Message message) throws Exception {
+        String conversationID = message.getMetadata().getConversationId().orElse(null);
+        logger.debug("Unsubscribing from thing {}...", conversationID);
+        return createResponseMessage(message);
+    }
+
+    @Override
+    public Message query(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message listDevices(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message platformCreateDevice(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message platformUpdateDevice(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message platformDeleteDevice(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message observe(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message actuate(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message error(Message message) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Message unrecognized(Message message) throws Exception {
+        return null;
     }
 }

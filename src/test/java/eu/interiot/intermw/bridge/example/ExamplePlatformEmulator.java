@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory;
 import spark.Service;
 
 import java.net.URL;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ExamplePlatformEmulator {
     private final Logger logger = LoggerFactory.getLogger(ExampleBridge.class);
@@ -44,31 +46,9 @@ public class ExamplePlatformEmulator {
 
     public void start() throws Exception {
         logger.debug("ExamplePlatformEmulator is initializing...");
-        Set<String> registeredThings = new HashSet<>();
 
         spark = Service.ignite()
                 .port(port);
-
-        spark.post("/things/register", (request, response) -> {
-            logger.debug("Received /things/register request.");
-            ThingRegisterInput input;
-            try {
-                input = objectMapper.readValue(request.body(), ThingRegisterInput.class);
-            } catch (Exception e) {
-                response.status(400);
-                return e.getMessage();
-            }
-
-            if (registeredThings.contains(input.thingId)) {
-                response.status(409);
-                return "Thing '" + input.thingId + "' is already registered.";
-            } else {
-                registeredThings.add(input.thingId);
-                logger.debug("Thing '{}' has been registered.", input.thingId);
-                response.status(204);
-                return "";
-            }
-        });
 
         spark.post("/things/subscribe", (request, response) -> {
             logger.debug("Received /things/subscribe request.");
@@ -83,10 +63,6 @@ public class ExamplePlatformEmulator {
             if (subscriptions.containsKey(input.conversationId)) {
                 response.status(409);
                 return "Already subscribed.";
-            }
-            if (!registeredThings.contains(input.thingId)) {
-                response.status(400);
-                return "Thing '" + input.thingId + "' is not registered.";
             }
 
             Subscription subscription = new Subscription(input.thingId, input.callbackUrl, input.conversationId);

@@ -17,9 +17,10 @@ import com.google.common.io.Resources;
 import eu.interiot.intermw.commons.DefaultConfiguration;
 import eu.interiot.intermw.commons.interfaces.Configuration;
 import eu.interiot.intermw.commons.model.Platform;
-import eu.interiot.message.EntityID;
+import eu.interiot.message.ID.EntityID;
 import eu.interiot.message.Message;
-import eu.interiot.message.URI.URIManagerMessageMetadata.MessageTypesEnum;
+import eu.interiot.message.managers.URI.URIManagerMessageMetadata;
+import eu.interiot.message.managers.URI.URIManagerMessageMetadata.MessageTypesEnum;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,14 +81,7 @@ public class ExampleBridgeTest {
         Message responseMsg = publisher.retrieveMessage();
         Set<MessageTypesEnum> messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
         assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.PLATFORM_REGISTER));
-
-        // register thing
-        exampleBridge.send(thingRegisterMsg);
-        responseMsg = publisher.retrieveMessage();
-        messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.THING_REGISTER));
+        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_REGISTER));
 
         // subscribe to thing
         exampleBridge.send(thingSubscribeMsg);
