@@ -37,7 +37,6 @@ import eu.interiot.message.exceptions.payload.PayloadException;
 import eu.interiot.message.managers.URI.URIManagerMessageMetadata;
 import eu.interiot.message.managers.URI.URIManagerMessageMetadata.MessageTypesEnum;
 import eu.interiot.message.metadata.PlatformMessageMetadata;
-import eu.interiot.message.utils.MessageUtils;
 
 import org.apache.jena.rdf.model.Model;
 
@@ -48,7 +47,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import java.util.Map;
 import java.util.Set;
 
 @eu.interiot.intermw.bridge.annotations.Bridge(platformType = "IoTivity")
@@ -57,14 +58,14 @@ public class IoTivityBridge extends AbstractBridge {
 	private final Logger logger = LoggerFactory.getLogger(IoTivityBridge.class);
 	private IoTivityClient iotivityClient = null;
 	private IotivityTranslator translator = new IotivityTranslator();
-	private String roolURL;
+	private String rootURL;
 
 	public IoTivityBridge(Configuration configuration, Platform platform) throws MiddlewareException {
 		super(configuration, platform);
 		logger.debug("Example bridge is initializing...");
 		
-		roolURL = configuration.getProperties().getProperty(IoTivityProperty.SERVER_ROOT_URL);
-        if (roolURL == null) {
+		rootURL = configuration.getProperties().getProperty(IoTivityProperty.SERVER_ROOT_URL);
+        if (rootURL == null) {
             throw new BridgeException("Invalid bridge configuration: property '"+IoTivityProperty.SERVER_ROOT_URL+"' is not set.");
         }
 		iotivityClient = new IoTivityCoapClientImpl(configuration);
@@ -73,7 +74,7 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message registerPlatform(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		Set<String> entityIDs = IoTivityUtils.getEntityIDsFromPayload(message.getPayload(), IoTivityUtils.EntityTypePlatform);
 		if (entityIDs.size() != 1) {
 			throw new BridgeException("Missing platform ID.");
@@ -93,7 +94,7 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message unregisterPlatform(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		Set<String> entityIDs = IoTivityUtils.getEntityIDsFromPayload(message.getPayload(), IoTivityUtils.EntityTypePlatform);
 		if (entityIDs.size() != 1) {
 			throw new BridgeException("Missing platform ID.");
@@ -113,7 +114,7 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message subscribe(Message message) throws Exception {	
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 		
 		if (entities.isEmpty()) {
@@ -137,7 +138,9 @@ public class IoTivityBridge extends AbstractBridge {
 			metadata.setConversationId(conversationId);
 
 			CoapHandler handler = new IoTivityCoapHandler(metadata, translator, publisher);
-			iotivityClient.observeResource(IoTivityUtils.getThingUrl(thingId), handler);
+			String id = IoTivityUtils.getThingId(thingId);
+			String resource = iotivityClient.findResourceURL(id, rootURL);
+			iotivityClient.observeResource(resource, handler);
 		} catch (Exception e) {
 			logger.error("Error subscribing: " + e.getMessage());
 			IoTivityUtils.createErrorResponseMessage(responseMessage, e);
@@ -147,12 +150,13 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message unsubscribe(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);	
+		Message responseMessage = createResponseMessage(message);	
 		Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 		try{
 			for (String entityId : entities) {
+				String id = IoTivityUtils.getThingId(entityId);
 				logger.info("Unsubscribing from thing {}...", entityId);
-				iotivityClient.stopObservingResource(IoTivityUtils.getThingUrl(entityId));
+				iotivityClient.stopObservingResource(iotivityClient.findResourceURL(id, rootURL));
 			}
 		} catch (Exception e){ 
 			logger.error("Error unsubscribing: " + e.getMessage());
@@ -164,19 +168,18 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message query(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		try{
 			Set<String> deviceIds = IoTivityUtils.getDeviceIDsFromPayload(message);
 			JsonArray array = new JsonArray();
 			for (String deviceId : deviceIds){
-				String resource = IoTivityUtils.getThingUrl(deviceId);
+				String id = IoTivityUtils.getThingId(deviceId);
+				String resource = iotivityClient.findResourceURL(id, rootURL);
 				JsonObject responseBody = iotivityClient.getResource(resource);
 				array.add(responseBody);
 			}
 			if (array.size() > 0) {
 				Model translatedModel = translator.toJenaModel(array.toString());
-//				translatedModel.write(System.out, "TTL") ;
-
 				MessagePayload responsePayload = new MessagePayload(translatedModel);
 				responseMessage.setPayload(responsePayload);
 			}
@@ -193,12 +196,14 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message listDevices(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		try{
 			iotivityClient.isPlatformRegistered();
-			String responseBody = iotivityClient.getResource(roolURL).toString();
-			Model translatedModel = translator.toJenaModel(responseBody);
+			String responseBody = iotivityClient.getResource(rootURL).toString();
+			String responseList = IoTivityUtils.getDeviceList(new JsonParser().parse(responseBody).getAsJsonObject()).toString();
+			Model translatedModel = translator.toJenaModel(responseList);
 			MessagePayload responsePayload = new MessagePayload(translatedModel);
+			//translatedModel.write(System.out, "TTL") ;
 			responseMessage.setPayload(responsePayload);
 			responseMessage.getMetadata().setStatus("OK");
 		}
@@ -212,16 +217,28 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message platformCreateDevice(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		try{
 			String body = translator.toFormatX(message.getPayload().getJenaModel());	
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 			iotivityClient.isPlatformRegistered();
 
 			for (String entityId : entities) {
-				String resource = IoTivityUtils.getThingUrl(entityId);
-				logger.debug("Registering thing {}...", resource);
-				iotivityClient.createResource(IoTivityUtils.jsonToMap(body), resource);
+				String id = IoTivityUtils.getThingId(entityId);
+				String resourceURL = null;
+				try {
+					resourceURL = iotivityClient.findResourceURL(id, rootURL);
+				}
+				catch (Exception ex) {};
+				if (resourceURL != null) throw new Exception("There is already a device with given id : " + entityId);
+				Map<String, Object> map = IoTivityUtils.jsonToMap(body);
+				map.put("id", id);
+				System.out.println(map);
+				resourceURL = IoTivityUtils.getDeviceURLByType((String) map.get("type"), rootURL);
+				map.remove("type");
+				resourceURL = "/a/devices/bloodpressure";
+				logger.debug("Registering thing {}...", id);
+				iotivityClient.createResource(map, resourceURL);
 	    		logger.debug("Success");
 			}
     	}catch(Exception e){
@@ -234,14 +251,15 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message platformUpdateDevice(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		try{
 			String body = translator.toFormatX(message.getPayload().getJenaModel());
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 			iotivityClient.isPlatformRegistered();
 
 			for (String entityId : entities) {
-				String resource = IoTivityUtils.getThingUrl(entityId);
+				String id = IoTivityUtils.getThingId(entityId);
+				String resource = iotivityClient.findResourceURL(id, rootURL);
 				logger.debug("Updating thing {}...", resource);
 				iotivityClient.editResource(IoTivityUtils.jsonToMap(body), resource);
 	    		logger.debug("Success");
@@ -256,15 +274,16 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message platformDeleteDevice(Message message) throws Exception {
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		try {
 			iotivityClient.isPlatformRegistered();
 			logger.debug("Removing devices...");
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 			for(String deviceId : entities){
-				String transformedId = IoTivityUtils.getThingUrl(deviceId);
-				iotivityClient.deleteResource(IoTivityUtils.getThingUrl(deviceId));
-				logger.debug("Device {} has been removed.", transformedId);
+				String id = IoTivityUtils.getThingId(deviceId);
+				String resource = iotivityClient.findResourceURL(id, rootURL);
+				iotivityClient.deleteResource(resource);
+				logger.debug("Device {} has been removed.", id);
 			}
 			responseMessage.getMetadata().setStatus("OK");
 		} 
@@ -289,7 +308,7 @@ public class IoTivityBridge extends AbstractBridge {
 	@Override
 	public Message error(Message message) throws Exception {
 		logger.debug("Error occured in {}...", message);
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		responseMessage.getMetadata().setStatus("KO");
 		responseMessage.getMetadata().setMessageType(MessageTypesEnum.ERROR);
 		return responseMessage;
@@ -298,7 +317,7 @@ public class IoTivityBridge extends AbstractBridge {
 	@Override
 	public Message unrecognized(Message message) throws Exception {
 		logger.debug("Unrecognized message type.");
-		Message responseMessage = MessageUtils.createResponseMessage(message);
+		Message responseMessage = createResponseMessage(message);
 		responseMessage.getMetadata().setStatus("OK");
 		return responseMessage;
 	}

@@ -34,6 +34,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import eu.interiot.intermw.bridge.exceptions.BridgeException;
 import eu.interiot.intermw.commons.model.Platform;
@@ -90,17 +92,17 @@ public class IoTivityUtils {
 	}
 	
 	/**
-	 * It processes the given resource URI ({@code thingId}) and retrieves the equivalent URL
+	 * It processes the given resource URI ({@code thingId}) and retrieves the equivalent id
 	 * 
 	 * @param thingId : the URI of an instance
 	 * @return the URL of the given resource
 	 * @throws BridgeException in case the given {@code thingId} is null or empty
 	 */
-	public static String getThingUrl(String thingId) throws BridgeException {
+	public static String getThingId(String thingId) throws BridgeException {
 		if (thingId == null || thingId.isEmpty()) {
 			throw new BridgeException("The thing id is null or empty");
 		}
-		return thingId.replace(EntityTypeInstance, "");
+		return thingId.replace(EntityTypeInstance+"/", "");
 	}
 	
 	/**
@@ -126,5 +128,28 @@ public class IoTivityUtils {
 	 */
 	public static Set<String> getDeviceIDsFromPayload(Message message) {
 		return getEntityIDsFromPayload(message.getPayload(), EntityTypeDevice);
+	}
+	
+	/**
+	 * Parses a JSON and returns the all devices value
+	 * @param allDevices : the {@code JsonObject} to be parsed
+	 * @return
+	 */
+	public static JsonElement getDeviceList(JsonObject allDevices){
+		return allDevices.get("alldevices");
+	}
+	
+	/**
+	 * Returns the equivalent URL according to the given device type
+	 * @param type : the type of the device
+	 * @param rootURL : the root URL that contains all devices
+	 * @return
+	 * @throws Exception in case the given type is not equivalent to one of the supported
+	 */
+	public static String getDeviceURLByType(String type, String rootURL) throws Exception {
+		if (type.equals("bloodpressure") || type.equals("oximeter")) {
+			return rootURL+"/"+type;
+		}
+		throw new Exception("The given type ("+type+") is not supported");
 	}
 }

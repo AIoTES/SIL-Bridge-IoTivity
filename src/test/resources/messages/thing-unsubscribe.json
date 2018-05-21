@@ -14,7 +14,7 @@
     "@id" : "InterIoTMsg:metadata"
   }, {
     "@graph" : [ {
-      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/a/light",
+      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device1",
       "@type" : "http://purl.oclc.org/NET/ssnx/ssn#Device",
       "http://www.w3.org/ns/sosa/isHostedBy" : {
         "@id" : "InterIoT:example-platform1"

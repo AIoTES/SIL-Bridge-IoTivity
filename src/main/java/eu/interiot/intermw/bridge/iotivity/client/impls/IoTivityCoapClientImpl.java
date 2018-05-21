@@ -31,10 +31,12 @@ import org.eclipse.californium.core.CoapObserveRelation;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import eu.interiot.intermw.bridge.exceptions.BridgeException;
 import eu.interiot.intermw.bridge.iotivity.IoTivityProperty;
+import eu.interiot.intermw.bridge.iotivity.IoTivityUtils;
 import eu.interiot.intermw.bridge.iotivity.client.IoTivityClient;
 import eu.interiot.intermw.bridge.iotivity.client.utils.EncodingUtils;
 import eu.interiot.intermw.bridge.iotivity.client.utils.HttpClient;
@@ -91,11 +93,14 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @param resource : the URL of the resource
 	 * @throws Exception
 	 */
+	@Override
 	public void editResource(Map<String, Object> attributesMap, final String resource) throws Exception{
 		CoapClient client = createCoapClient(createResourceURL(resource));
 		byte[] resourceEncoded = EncodingUtils.encodeResourceToCbor(attributesMap);
 		CoapResponse response = client.put(resourceEncoded, MediaTypeRegistry.APPLICATION_CBOR);
-		EncodingUtils.printCborEncodedBytes(response.getPayload());
+		if (response != null) {
+			EncodingUtils.printCborEncodedBytes(response.getPayload());
+		}
 	}
 	
 	/**
@@ -105,11 +110,14 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @param resource : the URL of the resource
 	 * @throws Exception
 	 */
+	@Override
 	public void createResource(Map<String, Object> attributesMap, final String resource) throws Exception{
 		CoapClient client = createCoapClient(createResourceURL(resource));
 		byte[] resourceEncoded = EncodingUtils.encodeResourceToCbor(attributesMap);
 		CoapResponse response = client.post(resourceEncoded, MediaTypeRegistry.APPLICATION_CBOR);
-		EncodingUtils.printCborEncodedBytes(response.getPayload());
+		if (response != null) {
+			EncodingUtils.printCborEncodedBytes(response.getPayload());
+		}
 	}
  	
 
@@ -120,6 +128,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @param resource : the URL of the resource to be deleted
 	 * @throws Exception
 	 */
+	@Override
 	public void deleteResource(final String resource) throws Exception{
 		CoapClient client = createCoapClient(createResourceURL(resource));
 		client.delete();
@@ -132,6 +141,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @return a JSON representation of the given resource
 	 * @throws Exception
 	 */
+	@Override
 	public JsonObject getResource(final String resource) throws Exception{
 		CoapClient client = createCoapClient(createResourceURL(resource));
 		CoapResponse response = client.get();
@@ -149,6 +159,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * 
 	 * @throws Exception
 	 */
+	@Override
 	public void discoverServer() throws Exception{
 		if (JAVA_VERSION < 1.8) {
 			CoapClient client = createCoapClient(createDiscoveryURL());
@@ -174,6 +185,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @param resource : the URL of the resource to be observed
 	 * @throws Exception
 	 */
+	@Override
 	public void observeResource(final String resource, final CoapHandler handler) throws Exception{
 		final CoapClient client = new CoapClient(createResourceURL(resource));
 		Thread thread = new Thread(){
@@ -196,12 +208,34 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * 
 	 * @param resource : the URL of the resource to terminate subscription
 	 */
+	@Override
 	public void stopObservingResource(final String resource){
 		CoapObserveRelation relation = observationMap.get(resource);
 		if (relation != null){
 			relation.proactiveCancel();
 			observationMap.remove(resource);
 		}
+	}
+	
+	/**
+	 * This method retrieves all registered resources and then iterates them in order to
+	 * find the one with the given {@code id}
+	 * @param id the id of the resource the search is made
+	 * @param rootURL : the URL of the root that contains all registered resources
+	 * @return
+	 * @throws Exception in case there is no resource with the given id
+	 */
+	@Override
+	public String findResourceURL(String id, String rootURL) throws Exception{
+		JsonObject allDevices = getResource(rootURL);
+		JsonArray deviceArray = IoTivityUtils.getDeviceList(allDevices).getAsJsonArray();
+		for (int i = 0; i < deviceArray.size(); i++) {
+			JsonObject device = deviceArray.get(i).getAsJsonObject();
+			if (device.get("id").getAsString().equals(id)) {
+				return device.get("url").getAsString();
+			}
+		}
+		throw new Exception("No device was found with the given id: " + id);
 	}
 	
 	/**

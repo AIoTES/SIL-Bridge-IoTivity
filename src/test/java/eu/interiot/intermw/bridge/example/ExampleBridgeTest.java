@@ -101,7 +101,7 @@ public class ExampleBridgeTest {
 //	      assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
 //	      assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
 //	      System.out.println("***************************************************************");
-        
+//        
 //        //delete thing
 //        System.out.println("DELETE THING");
 //        messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-delete.json"), publisher);
@@ -115,8 +115,8 @@ public class ExampleBridgeTest {
 //        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
 //        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DEVICE_ADD_OR_UPDATE));
 //        System.out.println("***************************************************************");
-        
-//        //register thing
+//        
+//        //edit thing
 //        System.out.println("EDIT THING");
 //        messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-update.json"), publisher);
 //        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
@@ -141,7 +141,7 @@ public class ExampleBridgeTest {
 //      System.out.println("***************************************************************");
 
        if (observe) {
-    	   waitForObervationMessage(publisher, 20);
+    	   waitForObervationMessage(publisher, 1000);
        }
     }
     

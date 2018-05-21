@@ -104,4 +104,12 @@ public interface IoTivityClient {
 	 * Method that checks if platform is registered. If not an exception is thrown
 	 */
 	public void isPlatformRegistered() throws Exception;
+	
+	/**
+	 * Method that checks the platform and finds the url of the resource with the given {@code id}
+	 * 
+	 * @param id: the id of the resource
+	 * @param rootURL: the root url that contains all resources
+	 */
+	public String findResourceURL(String id, String rootURL) throws Exception;
 }

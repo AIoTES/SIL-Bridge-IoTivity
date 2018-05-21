@@ -14,17 +14,17 @@
     "@id" : "InterIoTMsg:metadata"
   }, {
     "@graph" : [ {
-      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/a/light",
+      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device2",
       "@type" : "http://purl.oclc.org/NET/ssnx/ssn#Device",
       "InterIoT:syntax/Iotivity#hasAttribute" : [{
       	"@type" : "InterIoT:syntax/Iotivity#Attribute",
-      	"InterIoT:syntax/Iotivity#hasName" : "state",
-      	"InterIoT:syntax/Iotivity#hasValue" : false
+      	"InterIoT:syntax/Iotivity#hasName" : "MAC",
+      	"InterIoT:syntax/Iotivity#hasValue" : "New 00:12:A1:B0:78:11"
       },
        {
       	"@type" : "InterIoT:syntax/Iotivity#Attribute",
-      	"InterIoT:syntax/Iotivity#hasName" : "power",
-      	"InterIoT:syntax/Iotivity#hasValue" : 70
+      	"InterIoT:syntax/Iotivity#hasName" : "password",
+      	"InterIoT:syntax/Iotivity#hasValue" : "1234"
       }],
       "http://www.w3.org/ns/sosa/isHostedBy" : {
         "@id" : "InterIoT:example-platform1"
