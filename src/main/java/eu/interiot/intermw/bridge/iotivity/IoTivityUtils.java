@@ -64,7 +64,7 @@ public class IoTivityUtils {
 	 * @return the id
 	 */
 	public static String getPlatformId(Platform platform){
-		return platform.getId().getId();
+		return platform.getPlatformId();
 	}
 	
 	/**

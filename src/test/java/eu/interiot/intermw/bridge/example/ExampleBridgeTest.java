@@ -14,13 +14,13 @@ package eu.interiot.intermw.bridge.example;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.google.common.hash.Hashing;
 
 import eu.interiot.intermw.bridge.exceptions.BridgeException;
 import eu.interiot.intermw.bridge.iotivity.IoTivityBridge;
 import eu.interiot.intermw.commons.DefaultConfiguration;
 import eu.interiot.intermw.commons.interfaces.Configuration;
 import eu.interiot.intermw.commons.model.Platform;
-import eu.interiot.message.ID.EntityID;
 import eu.interiot.message.exceptions.MessageException;
 import eu.interiot.message.Message;
 import eu.interiot.message.managers.URI.URIManagerMessageMetadata;
@@ -32,6 +32,7 @@ import spark.Spark;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Set;
 
@@ -54,95 +55,102 @@ public class ExampleBridgeTest {
 
     @Test
     public void testBridge() throws Exception {
-        Configuration configuration = new DefaultConfiguration("*.bridge.properties");
+    	Configuration configuration = new DefaultConfiguration("*.bridge.properties");
 
-        URL callbackUrl = new URL(configuration.getProperty("bridge.callback.address"));
+        URL callbackUrl = new URL(configuration.getProperty("bridge.callback.url"));
         int callbackPort = callbackUrl.getPort();
         Spark.port(callbackPort);
         
         boolean observe = false;
 
-        // create Message objects from serialized messages
-        Message platformRegisterMsg = createMessage("messages/platform-register.json");
-
-        // create Platform object using platform-register message
-        EntityID platformId = platformRegisterMsg.getMetadata().asPlatformMessageMetadata().getReceivingPlatformIDs().iterator().next();
-        Platform platform = new Platform(platformId.toString(), platformRegisterMsg.getPayload());
+        Platform platform = new Platform();
+        platform.setPlatformId("http://inter-iot.eu/IoTivity");
+        platform.setType("http://inter-iot.eu/IoTivity");
+        platform.setClientId("myclient");
+        platform.setName("IoTivity");
+        platform.setBaseEndpoint(new URL("http://localhost:4568"));
+        platform.setLocation("http://inter-iot.eu/TestLocation");
+        platform.setUsername("exampleuser");
+        String encryptedPassword = Hashing.sha256()
+                .hashString("somepassword", StandardCharsets.UTF_8)
+                .toString();        
+        platform.setEncryptedPassword(encryptedPassword);
+        platform.setEncryptionAlgorithm("SHA-256");     
 
         IoTivityBridge exampleBridge = new IoTivityBridge(configuration, platform);
         PublisherMock<Message> publisher = new PublisherMock<>();
         exampleBridge.setPublisher(publisher);
         Set<MessageTypesEnum> messageTypesEnumSet;
 
-//        // register platform
+        // register platform
         System.out.println("REGISTER PLATFORM");
         messageTypesEnumSet = sendMessage(exampleBridge,  createMessage("messages/platform-register.json"), publisher);
         assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
         assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_REGISTER));
         System.out.println("***************************************************************");
         
-//        // unregister platform
-//        System.out.println("UNREGISTER PLATFORM");
-//        messageTypesEnumSet = sendMessage(exampleBridge,  createMessage("messages/platform-unregister.json"), publisher);
-//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_UNREGISTER));
-//        System.out.println("***************************************************************");
+        // unregister platform
+        System.out.println("UNREGISTER PLATFORM");
+        messageTypesEnumSet = sendMessage(exampleBridge,  createMessage("messages/platform-unregister.json"), publisher);
+        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_UNREGISTER));
+        System.out.println("***************************************************************");
         
-//	      // list devices
-//	      System.out.println("LIST DEVICES");
-//	      messageTypesEnumSet = sendMessage(exampleBridge,  createMessage("messages/list-devices.json"), publisher);
-//	      assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//	      assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.LIST_DEVICES));
-//	      System.out.println("***************************************************************");
+	    // list devices
+	    System.out.println("LIST DEVICES");
+	    messageTypesEnumSet = sendMessage(exampleBridge,  createMessage("messages/list-devices.json"), publisher);
+	    assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+	    assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.LIST_DEVICES));
+	    System.out.println("***************************************************************");
         
-//          // query
-//	      System.out.println("QUERY");
-//	      messageTypesEnumSet = sendMessage(exampleBridge,  createMessage("messages/query.json"), publisher);
-//	      assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//	      assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
-//	      System.out.println("***************************************************************");
-//        
-//        //delete thing
-//        System.out.println("DELETE THING");
-//        messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-delete.json"), publisher);
-//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DEVICE_REMOVE));
-//        System.out.println("***************************************************************");
+        // query
+        System.out.println("QUERY");
+        messageTypesEnumSet = sendMessage(exampleBridge,  createMessage("messages/query.json"), publisher);
+        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
+        System.out.println("***************************************************************");
+    
+        //delete thing
+        System.out.println("DELETE THING");
+	    messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-delete.json"), publisher);
+	    assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+	    assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DEVICE_REMOVE));
+	    System.out.println("***************************************************************");
         
-//        //register thing
-//        System.out.println("REGISTER THING");
-//        messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-register.json"), publisher);
-//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DEVICE_ADD_OR_UPDATE));
-//        System.out.println("***************************************************************");
-//        
-//        //edit thing
-//        System.out.println("EDIT THING");
-//        messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-update.json"), publisher);
-//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DEVICE_ADD_OR_UPDATE));
-//        System.out.println("***************************************************************");
+	    //register thing
+	    System.out.println("REGISTER THING");
+	    messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-register.json"), publisher);
+	    assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+	    assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DEVICE_ADD_OR_UPDATE));
+	    System.out.println("***************************************************************");
+        
+	    //edit thing
+	    System.out.println("EDIT THING");
+	    messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-update.json"), publisher);
+	    assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+	    assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.DEVICE_ADD_OR_UPDATE));
+	    System.out.println("***************************************************************");
 
-//        // subscribe to thing
-//        System.out.println("SUBSCRIBE TO THING");
-//        messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-subscribe.json"), publisher);
-//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.SUBSCRIBE));
-//    	  observe = true;
-//        System.out.println("***************************************************************");
+	    // subscribe to thing
+	    System.out.println("SUBSCRIBE TO THING");
+	    messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-subscribe.json"), publisher);
+	    assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+	    assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.SUBSCRIBE));
+    	observe = true;
+    	System.out.println("***************************************************************");
       
         
-//      // unsubscribe from thing
-//      Thread.sleep(2000);
-//      System.out.println("UNSUBSCRIBE FROM THING");
-//      messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-unsubscribe.json"), publisher);
-//      assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//      assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.UNSUBSCRIBE));
-//      System.out.println("***************************************************************");
+    	// unsubscribe from thing
+    	Thread.sleep(2000);
+    	System.out.println("UNSUBSCRIBE FROM THING");
+    	messageTypesEnumSet = sendMessage(exampleBridge, createMessage("messages/thing-unsubscribe.json"), publisher);
+    	assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+    	assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.UNSUBSCRIBE));
+    	System.out.println("***************************************************************");
 
-       if (observe) {
+        if (observe) {
     	   waitForObervationMessage(publisher, 1000);
-       }
+        }
     }
     
     /**
@@ -179,7 +187,7 @@ public class ExampleBridgeTest {
      * @throws BridgeException
      */
     private  Set<MessageTypesEnum> sendMessage(IoTivityBridge bridge, Message msg, PublisherMock<Message> publisher) throws BridgeException{
-    	bridge.send(msg);
+    	bridge.process(msg);
         Message responseMsg = publisher.retrieveMessage();
         return responseMsg.getMetadata().getMessageTypes();
     }

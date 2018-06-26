@@ -21,6 +21,7 @@
 package eu.interiot.intermw.bridge.iotivity;
 
 import eu.interiot.intermw.bridge.abstracts.AbstractBridge;
+import eu.interiot.intermw.bridge.annotations.Bridge;
 import eu.interiot.intermw.bridge.exceptions.BridgeException;
 import eu.interiot.intermw.bridge.iotivity.client.IoTivityClient;
 import eu.interiot.intermw.bridge.iotivity.client.IoTivityCoapHandler;
@@ -52,7 +53,7 @@ import com.google.gson.JsonParser;
 import java.util.Map;
 import java.util.Set;
 
-@eu.interiot.intermw.bridge.annotations.Bridge(platformType = "IoTivity")
+@Bridge(platformType = "http://inter-iot.eu/IoTivity")
 public class IoTivityBridge extends AbstractBridge {
 
 	private final Logger logger = LoggerFactory.getLogger(IoTivityBridge.class);
@@ -68,18 +69,18 @@ public class IoTivityBridge extends AbstractBridge {
         if (rootURL == null) {
             throw new BridgeException("Invalid bridge configuration: property '"+IoTivityProperty.SERVER_ROOT_URL+"' is not set.");
         }
-		iotivityClient = new IoTivityCoapClientImpl(configuration);
+        iotivityClient = new IoTivityCoapClientImpl(configuration);
 		logger.info("Example bridge has been initialized successfully.");
 	}
 
 	@Override
 	public Message registerPlatform(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
-		Set<String> entityIDs = IoTivityUtils.getEntityIDsFromPayload(message.getPayload(), IoTivityUtils.EntityTypePlatform);
-		if (entityIDs.size() != 1) {
-			throw new BridgeException("Missing platform ID.");
-		}
-		String platformId = entityIDs.iterator().next();
+//		Set<String> entityIDs = IoTivityUtils.getEntityIDsFromPayload(message.getPayload(), IoTivityUtils.EntityTypePlatform);
+//		if (entityIDs.size() != 1) {
+//			throw new BridgeException("Missing platform ID.");
+//		}
+		String platformId = platform.getPlatformId();		
 		logger.debug("Registering platform {}...", platformId);
 		try {
 			iotivityClient.discoverServer();
@@ -95,11 +96,11 @@ public class IoTivityBridge extends AbstractBridge {
 	@Override
 	public Message unregisterPlatform(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
-		Set<String> entityIDs = IoTivityUtils.getEntityIDsFromPayload(message.getPayload(), IoTivityUtils.EntityTypePlatform);
-		if (entityIDs.size() != 1) {
-			throw new BridgeException("Missing platform ID.");
-		}
-		String platformId = entityIDs.iterator().next();
+//		Set<String> entityIDs = IoTivityUtils.getEntityIDsFromPayload(message.getPayload(), IoTivityUtils.EntityTypePlatform);
+//		if (entityIDs.size() != 1) {
+//			throw new BridgeException("Missing platform ID.");
+//		}
+		String platformId = platform.getPlatformId();	
 		logger.debug("Unregistering platform {}...", platformId);
 		try {
 			logger.debug("Platform {} has been unregistered.", platformId);
@@ -134,7 +135,7 @@ public class IoTivityBridge extends AbstractBridge {
 			metadata.initializeMetadata();
 			metadata.addMessageType(URIManagerMessageMetadata.MessageTypesEnum.OBSERVATION);
 			metadata.addMessageType(URIManagerMessageMetadata.MessageTypesEnum.RESPONSE);
-			metadata.setSenderPlatformId(new EntityID(platform.getId().getId()));
+			metadata.setSenderPlatformId(new EntityID(platform.getPlatformId()));
 			metadata.setConversationId(conversationId);
 
 			CoapHandler handler = new IoTivityCoapHandler(metadata, translator, publisher);
@@ -216,14 +217,15 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	public Message platformCreateDevice(Message message) throws Exception {
-		Message responseMessage = createResponseMessage(message);
-		try{
-			String body = translator.toFormatX(message.getPayload().getJenaModel());	
+	public Message platformCreateDevices(Message message) throws Exception {
+		logger.debug("platformCreateDevices() started.");
+		Message responseMessage = createResponseMessage(message);		
+		try{			
+			String body = translator.toFormatX(message.getPayload().getJenaModel());
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 			iotivityClient.isPlatformRegistered();
 
-			for (String entityId : entities) {
+			for (String entityId : entities) {					
 				String id = IoTivityUtils.getThingId(entityId);
 				String resourceURL = null;
 				try {
@@ -250,7 +252,7 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	public Message platformUpdateDevice(Message message) throws Exception {
+	public Message platformUpdateDevices(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		try{
 			String body = translator.toFormatX(message.getPayload().getJenaModel());
@@ -273,7 +275,7 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	public Message platformDeleteDevice(Message message) throws Exception {
+	public Message platformDeleteDevices(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		try {
 			iotivityClient.isPlatformRegistered();

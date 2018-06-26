@@ -1,0 +1,7 @@
+eu\interiot\intermw\bridge\example\ExamplePlatformEmulator$ThingRegisterInput.class
+eu\interiot\intermw\bridge\example\ExamplePlatformEmulator$ThingSubscribeInput.class
+eu\interiot\intermw\bridge\example\ExamplePlatformEmulator.class
+eu\interiot\intermw\bridge\example\ExampleBridgeTest.class
+eu\interiot\intermw\bridge\example\PublisherMock.class
+eu\interiot\intermw\bridge\example\ExamplePlatformEmulator$ObservationsPublisher.class
+eu\interiot\intermw\bridge\example\ExamplePlatformEmulator$Subscription.class

@@ -1,0 +1,14 @@
+eu\interiot\intermw\bridge\iotivity\IoTivityUtils$1.class
+eu\interiot\intermw\bridge\iotivity\client\utils\HttpClient.class
+eu\interiot\intermw\bridge\iotivity\client\impls\IoTivityCoapClientImpl.class
+eu\interiot\intermw\bridge\iotivity\client\utils\EncodingUtils.class
+eu\interiot\intermw\bridge\iotivity\client\utils\EncodingUtils$1.class
+eu\interiot\intermw\bridge\iotivity\client\impls\IoTivityCoapClientImpl$1.class
+eu\interiot\intermw\bridge\iotivity\client\IoTivityClient.class
+eu\interiot\intermw\bridge\iotivity\client\impls\IoTivityCoapClientImpl$2.class
+eu\interiot\intermw\bridge\iotivity\client\IoTivityCoapHandler.class
+eu\interiot\intermw\bridge\iotivity\IoTivityProperty.class
+eu\interiot\intermw\bridge\iotivity\client\utils\EncodingUtils$2.class
+eu\interiot\intermw\bridge\iotivity\IoTivityUtils.class
+eu\interiot\intermw\translators\syntax\iotivity\IotivityTranslator.class
+eu\interiot\intermw\bridge\iotivity\IoTivityBridge.class
