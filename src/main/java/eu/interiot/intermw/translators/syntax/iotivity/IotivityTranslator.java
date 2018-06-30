@@ -67,6 +67,7 @@ import eu.interiot.translators.syntax.SyntacticTranslator;
 public class IotivityTranslator extends SyntacticTranslator<String> {
 
 	public static String iotivityBaseURI = "http://inter-iot.eu/syntax/Iotivity#";
+	public static String interIoT = "http://inter-iot.eu/";
 
 	private Resource arrayType;
 	private Resource valueType;
@@ -81,6 +82,9 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	private Property hasValue;
 	private Property hasElement;
 	private Property hasNumber;
+	
+	private Property deviceHasName;
+	private Property hasLocation;
 
 	/**
 	 * Constructor
@@ -106,6 +110,8 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		hasValue = jenaModel.createProperty(getBaseURI() + "hasValue");
 		hasElement = jenaModel.createProperty(getBaseURI() + "hasElement");
 		hasNumber = jenaModel.createProperty(getBaseURI() + "hasNumber");
+		deviceHasName = jenaModel.createProperty(interIoT + "GOIoTP#hasName");
+		hasLocation = jenaModel.createProperty(interIoT + "GOIoTP#hasLocation");
 	}
 
 	@Override
@@ -273,31 +279,61 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	private void parseAttributesToJson(Resource entityResource, ObjectNode entity, Model jenaModel,
 			ObjectMapper mapper) {
 		NodeIterator it = jenaModel.listObjectsOfProperty(entityResource, hasAttribute);
-		while (it.hasNext()) {
-			RDFNode attribute = it.next();
-			if (attribute.isResource() && attribute.asResource().hasProperty(RDF.type, attributeType)) {
-
-				String attributeName = "";
-				NodeIterator names = jenaModel.listObjectsOfProperty(attribute.asResource(), hasName);
-				if (names.hasNext()) {
-					attributeName = names.next().toString();
-				}
-				if (attributeName.isEmpty())
-					continue;
-
-				NodeIterator valIterator = jenaModel.listObjectsOfProperty(attribute.asResource(), hasValue);
-				if (valIterator.hasNext()) {
-					RDFNode valueNode = valIterator.next();
-					if (valueNode.isLiteral()) {
-						ValueNode jsonValueNode = parseLiteralToValueNode(valueNode.asLiteral(), mapper);
-						entity.set(attributeName, jsonValueNode);
+		if (it.hasNext()) {
+			while (it.hasNext()) {
+				RDFNode attribute = it.next();
+				if (attribute.isResource() && attribute.asResource().hasProperty(RDF.type, attributeType)) {
+	
+					String attributeName = "";
+					NodeIterator names = jenaModel.listObjectsOfProperty(attribute.asResource(), hasName);
+					if (names.hasNext()) {
+						attributeName = names.next().toString();
 					}
-				} else {
-					ObjectNode attributeNode = mapper.createObjectNode();
-					entity.set(attributeName, attributeNode);
-					parseAttributesToJson(attribute.asResource(), attributeNode, jenaModel, mapper);
+					if (attributeName.isEmpty())
+						continue;
+	
+					NodeIterator valIterator = jenaModel.listObjectsOfProperty(attribute.asResource(), hasValue);
+					if (valIterator.hasNext()) {
+						RDFNode valueNode = valIterator.next();
+						if (valueNode.isLiteral()) {
+							ValueNode jsonValueNode = parseLiteralToValueNode(valueNode.asLiteral(), mapper);
+							entity.set(attributeName, jsonValueNode);
+						}
+					} else {
+						ObjectNode attributeNode = mapper.createObjectNode();
+						entity.set(attributeName, attributeNode);
+						parseAttributesToJson(attribute.asResource(), attributeNode, jenaModel, mapper);
+					}
 				}
 			}
+		}
+		else {
+			it = jenaModel.listObjectsOfProperty(entityResource, deviceHasName);
+			while (it.hasNext()) {
+				RDFNode attribute = it.next();
+				if (attribute.isLiteral()) {
+					ValueNode jsonValueNode = parseLiteralToValueNode(attribute.asLiteral(), mapper);
+					entity.set("name", jsonValueNode);
+				}
+			}
+			it = jenaModel.listObjectsOfProperty(entityResource, hasLocation);
+			while (it.hasNext()) {
+				RDFNode attribute = it.next();
+				if (attribute.isResource()) {
+					System.out.println(attribute.asResource());
+					ValueNode jsonValueNode = mapper.getNodeFactory().textNode(attribute.asResource().toString());
+					entity.set("location", jsonValueNode);
+				}
+			}
+			//add default values
+			entity.set("type", mapper.getNodeFactory().textNode("bloodpressure"));
+			entity.set("model", mapper.getNodeFactory().textNode("Duo ultima"));
+			entity.set("MAC", mapper.getNodeFactory().textNode("00:12:A1:B0:78:14"));
+			entity.set("password", mapper.getNodeFactory().textNode("111111"));
+			entity.set("manufacturer", mapper.getNodeFactory().textNode("Fibaro"));
+
+
+
 		}
 	}
 

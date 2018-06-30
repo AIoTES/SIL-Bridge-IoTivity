@@ -81,7 +81,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
         if (proxyIp == null && iotivityServerPort == null) {
             throw new BridgeException("Invalid bridge configuration: define '"+IoTivityProperty.PROXY_IP+"' or '"+IoTivityProperty.SERVER_PORT+"'.");
         }
-		if (iotivityServerPort != null) {
+        if (!iotivityServerPort.isEmpty() && iotivityServerPort != null) {
 			hardCodedPort = Integer.parseInt(iotivityServerPort);
 		}
 	}

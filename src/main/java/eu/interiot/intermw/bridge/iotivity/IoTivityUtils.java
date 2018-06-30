@@ -55,7 +55,7 @@ public class IoTivityUtils {
 	public static final String URIsosa = "http://www.w3.org/ns/sosa/";;
 	public static final String EntityTypeInstance = IotivityTranslator.iotivityBaseURI + "Instance";
 	public static final String EntityTypePlatform = URIsosa + "Platform";
-	public static final String EntityTypeDevice = "http://purl.oclc.org/NET/ssnx/ssn#Device";
+	public static final String EntityTypeDevice = "http://inter-iot.eu/GOIoTP#IoTDevice";
 	
 	/**
 	 * Retrieves the id of the given {@code platform}
@@ -64,7 +64,7 @@ public class IoTivityUtils {
 	 * @return the id
 	 */
 	public static String getPlatformId(Platform platform){
-		return platform.getId().getId();
+		return platform.getPlatformId();
 	}
 	
 	/**
