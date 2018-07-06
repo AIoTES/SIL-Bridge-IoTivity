@@ -226,7 +226,10 @@ public class IoTivityBridge extends AbstractBridge {
 					resourceURL = iotivityClient.findResourceURL(id, rootURL);
 				}
 				catch (Exception ex) {};
-				if (resourceURL != null) throw new Exception("There is already a device with given id : " + entityId);
+				if (resourceURL != null) {
+					return responseMessage;
+					//throw new Exception("There is already a device with given id : " + entityId);
+				}
 				Map<String, Object> map = IoTivityUtils.jsonToMap(body);
 				map.put("id", id);
 				//System.out.println(map);
