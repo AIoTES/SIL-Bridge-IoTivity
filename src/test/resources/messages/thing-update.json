@@ -14,21 +14,15 @@
     "@id" : "InterIoTMsg:metadata"
   }, {
     "@graph" : [ {
-      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device1",
+      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device3",
       "@type" : "InterIoT:GOIoTP#IoTDevice",
-      "InterIoT:syntax/Iotivity#hasAttribute" : [{
-      	"@type" : "InterIoT:syntax/Iotivity#Attribute",
-      	"InterIoT:syntax/Iotivity#hasName" : "MAC",
-      	"InterIoT:syntax/Iotivity#hasValue" : "New 00:12:A1:B0:78:11"
-      },
-       {
-      	"@type" : "InterIoT:syntax/Iotivity#Attribute",
-      	"InterIoT:syntax/Iotivity#hasName" : "password",
-      	"InterIoT:syntax/Iotivity#hasValue" : "1234"
-      }],
-      "http://www.w3.org/ns/sosa/isHostedBy" : {
-        "@id" : "InterIoT:IoTivity"
-      }
+      "InterIoT:GOIoTP#hasDiastolic" : 130,
+      "InterIoT:GOIoTP#hasSystolic" : 100,
+      "InterIoT:GOIoTP#hasPulse" : 50,
+      "InterIoT:GOIoTP#hasGlucose" : 90,
+       "http://www.w3.org/ns/sosa/IsHostedBy" : {
+         "@id" : "InterIoT:IoTivity"
+       }
     } ],
     "@id" : "InterIoTMsg:payload"
   } ],

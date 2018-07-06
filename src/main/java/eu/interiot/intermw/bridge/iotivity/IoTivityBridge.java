@@ -229,7 +229,7 @@ public class IoTivityBridge extends AbstractBridge {
 				if (resourceURL != null) throw new Exception("There is already a device with given id : " + entityId);
 				Map<String, Object> map = IoTivityUtils.jsonToMap(body);
 				map.put("id", id);
-				System.out.println(map);
+				//System.out.println(map);
 				resourceURL = IoTivityUtils.getDeviceURLByType((String) map.get("type"), rootURL);
 				map.remove("type");
 				resourceURL = "/a/devices/bloodpressure";
@@ -293,7 +293,25 @@ public class IoTivityBridge extends AbstractBridge {
 
 	@Override
 	public Message observe(Message message) throws Exception {
-		return null;
+		Message responseMessage = createResponseMessage(message);
+		try{
+			String body = translator.toFormatX(message.getPayload().getJenaModel());
+			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
+			iotivityClient.isPlatformRegistered();
+
+			for (String entityId : entities) {
+				String id = IoTivityUtils.getThingId(entityId);
+				String resource = iotivityClient.findResourceURL(id, rootURL);
+				logger.debug("Updating thing {}...", resource);
+				iotivityClient.editResource(IoTivityUtils.jsonToMap(body), resource);
+	    		logger.debug("Success");
+			}
+    	}catch(Exception e){
+    		logger.error("Error updating device: " + e.getMessage());
+			e.printStackTrace();
+			IoTivityUtils.createErrorResponseMessage(responseMessage, e);
+    	}
+		return responseMessage;
 	}
 
 	@Override

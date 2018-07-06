@@ -85,6 +85,12 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	
 	private Property deviceHasName;
 	private Property hasLocation;
+	
+	private Property hasDiastolic;
+	private Property hasSystolic;
+	private Property hasPulse;
+	private Property hasGlucose;
+
 
 	/**
 	 * Constructor
@@ -112,6 +118,11 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		hasNumber = jenaModel.createProperty(getBaseURI() + "hasNumber");
 		deviceHasName = jenaModel.createProperty(interIoT + "GOIoTP#hasName");
 		hasLocation = jenaModel.createProperty(interIoT + "GOIoTP#hasLocation");
+		
+		hasDiastolic = jenaModel.createProperty(interIoT + "GOIoTP#hasDiastolic");
+		hasSystolic = jenaModel.createProperty(interIoT + "GOIoTP#hasSystolic");
+		hasPulse = jenaModel.createProperty(interIoT + "GOIoTP#hasPulse");
+		hasGlucose = jenaModel.createProperty(interIoT + "GOIoTP#hasGlucose");
 	}
 
 	@Override
@@ -308,32 +319,59 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 			}
 		}
 		else {
-			it = jenaModel.listObjectsOfProperty(entityResource, deviceHasName);
-			while (it.hasNext()) {
-				RDFNode attribute = it.next();
-				if (attribute.isLiteral()) {
-					ValueNode jsonValueNode = parseLiteralToValueNode(attribute.asLiteral(), mapper);
-					entity.set("name", jsonValueNode);
-				}
-			}
-			it = jenaModel.listObjectsOfProperty(entityResource, hasLocation);
-			while (it.hasNext()) {
-				RDFNode attribute = it.next();
-				if (attribute.isResource()) {
-					System.out.println(attribute.asResource());
-					ValueNode jsonValueNode = mapper.getNodeFactory().textNode(attribute.asResource().toString());
-					entity.set("location", jsonValueNode);
-				}
-			}
+			parseLiteral(entityResource, jenaModel, deviceHasName, entity, mapper, "name");
+			parseLiteral(entityResource, jenaModel, hasDiastolic, entity, mapper, "diastolic");
+			parseLiteral(entityResource, jenaModel, hasSystolic, entity, mapper, "systolic");
+			parseLiteral(entityResource, jenaModel, hasPulse, entity, mapper, "pulse");
+			parseLiteral(entityResource, jenaModel, hasGlucose, entity, mapper, "glucose");
+			parseResource(entityResource, jenaModel, hasLocation, entity, mapper, "location");
+			
 			//add default values
 			entity.set("type", mapper.getNodeFactory().textNode("bloodpressure"));
 			entity.set("model", mapper.getNodeFactory().textNode("Duo ultima"));
 			entity.set("MAC", mapper.getNodeFactory().textNode("00:12:A1:B0:78:14"));
 			entity.set("password", mapper.getNodeFactory().textNode("111111"));
 			entity.set("manufacturer", mapper.getNodeFactory().textNode("Fibaro"));
-
-
-
+		}
+	}
+	
+	/**
+	 * 
+	 * @param entityResource : the RDF entity resource to be parsed
+	 * @param jenaModel: a JENA model
+	 * @param p : the property we want to parse
+	 * @param entity : a JSON entity to be appended with the parsed values
+	 * @param mapper : an object mapper needed for the manipulation of the given JSON entity
+	 * @param fieldName : the name that will ne used as json field 
+	 */
+	private void parseResource(Resource entityResource, Model jenaModel, Property p, ObjectNode entity, ObjectMapper mapper, String fieldName) {
+		NodeIterator it = jenaModel.listObjectsOfProperty(entityResource, p);
+		while (it.hasNext()) {
+			RDFNode attribute = it.next();
+			if (attribute.isResource()) {
+				ValueNode jsonValueNode = mapper.getNodeFactory().textNode(attribute.asResource().toString());
+				entity.set(fieldName, jsonValueNode);
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * @param entityResource : the RDF entity resource to be parsed
+	 * @param jenaModel: a JENA model
+	 * @param p : the property we want to parse
+	 * @param entity : a JSON entity to be appended with the parsed values
+	 * @param mapper : an object mapper needed for the manipulation of the given JSON entity
+	 * @param fieldName : the name that will ne used as json field 
+	 */
+	private void parseLiteral(Resource entityResource, Model jenaModel, Property p, ObjectNode entity, ObjectMapper mapper, String fieldName) {
+		NodeIterator it = jenaModel.listObjectsOfProperty(entityResource, p);
+		while (it.hasNext()) {
+			RDFNode attribute = it.next();
+			if (attribute.isLiteral()) {
+				ValueNode jsonValueNode = parseLiteralToValueNode(attribute.asLiteral(), mapper);
+				entity.set(fieldName, jsonValueNode);
+			}
 		}
 	}
 
@@ -385,14 +423,22 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		while (it.hasNext()) {
 			Map.Entry<String, JsonNode> field = it.next();
 			if (field.getKey().equals("id") || field.getKey().equals("href")) {
-				objectResource.addProperty(RDF.type, instanceType);
-				objectResource.addProperty(hasId, field.getValue().asText());
+				objectResource.addProperty(RDF.type, deviceType);
+				objectResource.addProperty(hasId, instanceType +"/" + field.getValue().asText());
+
 			} else {
-				Resource attr = jenaModel.createResource();
-				attr.addProperty(RDF.type, attributeType);
-				objectResource.addProperty(hasAttribute, attr);
-				attr.addProperty(hasName, field.getKey());
-				parseValueToJena(attr, field.getValue(), jenaModel);
+				if (field.getKey().equals("diastolic")) {
+					objectResource.addLiteral(hasDiastolic, field.getValue().asInt());
+				}
+				else if (field.getKey().equals("glucose")) {
+					objectResource.addLiteral(hasGlucose, field.getValue().asInt());
+				}
+				else if (field.getKey().equals("systolic")) {
+					objectResource.addLiteral(hasSystolic, field.getValue().asInt());
+				}
+				else if (field.getKey().equals("pulse")) {
+					objectResource.addLiteral(hasPulse, field.getValue().asInt());
+				}
 			}
 		}
 	}

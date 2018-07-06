@@ -14,7 +14,7 @@
     "@id" : "InterIoTMsg:metadata"
   }, {
     "@graph" : [ {
-      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device1",
+      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device3",
       "@type" : "InterIoT:GOIoTP#IoTDevice",
       "http://www.w3.org/ns/sosa/isHostedBy" : {
         "@id" : "InterIoT:IoTivity"

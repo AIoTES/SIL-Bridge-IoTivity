@@ -2,7 +2,7 @@
   "@graph" : [ {
     "@graph" : [ {
       "@id" : "InterIoTMsg:meta/70b5d0fc-699f-4915-9176-5960ed1d9b95",
-      "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Platform_update_Device" ],
+      "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Observation" ],
       "InterIoTMsg:ReceiverPlatformId" : {
         "@id" : "InterIoT:IoTivity"
       },
@@ -16,10 +16,10 @@
     "@graph" : [ {
       "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device3",
       "@type" : "InterIoT:GOIoTP#IoTDevice",
-      "InterIoT:GOIoTP#hasDiastolic" : 130,
-      "InterIoT:GOIoTP#hasSystolic" : 100,
+      "InterIoT:GOIoTP#hasDiastolic" : 120,
+      "InterIoT:GOIoTP#hasSystolic" : 80,
       "InterIoT:GOIoTP#hasPulse" : 50,
-      "InterIoT:GOIoTP#hasGlucose" : 90,
+      "InterIoT:GOIoTP#hasGlucose" : 93,
        "http://www.w3.org/ns/sosa/IsHostedBy" : {
          "@id" : "InterIoT:IoTivity"
        }
