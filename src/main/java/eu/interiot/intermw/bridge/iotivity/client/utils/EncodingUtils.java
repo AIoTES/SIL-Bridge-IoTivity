@@ -74,7 +74,7 @@ public class EncodingUtils {
 				return jsonParser.parse(new Gson().toJson(list)).getAsJsonArray();
 			}		
 		}
-		catch(com.fasterxml.jackson.databind.exc.MismatchedInputException ex){
+		catch(Exception ex){
 			Map<String, Object> map = mapper.readValue(parser, new TypeReference<Map<String, Object>>() { });
 			parser.close();	
 			return jsonParser.parse(new Gson().toJson(map)).getAsJsonObject();
