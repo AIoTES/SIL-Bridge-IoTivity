@@ -76,7 +76,6 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	private Resource elementType;
 	private Resource deviceType;
 
-	private Property hasId;
 	private Property hasAttribute;
 	private Property hasName;
 	private Property hasValue;
@@ -110,7 +109,6 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		elementType = jenaModel.createResource(getBaseURI() + "ArrayElement");
 		deviceType = jenaModel.createResource(IoTivityUtils.EntityTypeDevice);
 
-		hasId = jenaModel.createProperty(getBaseURI() + "hasId");
 		hasAttribute = jenaModel.createProperty(getBaseURI() + "hasAttribute");
 		hasName = jenaModel.createProperty(getBaseURI() + "hasName");
 		hasValue = jenaModel.createProperty(getBaseURI() + "hasValue");
@@ -119,10 +117,10 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		deviceHasName = jenaModel.createProperty(interIoT + "GOIoTP#hasName");
 		hasLocation = jenaModel.createProperty(interIoT + "GOIoTP#hasLocation");
 		
-		hasDiastolic = jenaModel.createProperty(interIoT + "GOIoTP#hasDiastolic");
-		hasSystolic = jenaModel.createProperty(interIoT + "GOIoTP#hasSystolic");
-		hasPulse = jenaModel.createProperty(interIoT + "GOIoTP#hasPulse");
-		hasGlucose = jenaModel.createProperty(interIoT + "GOIoTP#hasGlucose");
+		hasDiastolic = jenaModel.createProperty(iotivityBaseURI + "hasDiastolic");
+		hasSystolic = jenaModel.createProperty(iotivityBaseURI + "hasSystolic");
+		hasPulse = jenaModel.createProperty(iotivityBaseURI + "hasPulse");
+		hasGlucose = jenaModel.createProperty(iotivityBaseURI + "hasGlucose");
 	}
 
 	@Override
@@ -176,7 +174,8 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		JsonNode topLevelNode = mapper.readTree(parser);
 		Model jenaModel = ModelFactory.createDefaultModel();
 		if (topLevelNode.isObject()) {
-			Resource myEntity = jenaModel.createResource();
+			Resource myEntity = jenaModel.createResource(instanceType +"/" + topLevelNode.get("id").asText());
+			myEntity.addProperty(RDF.type, interIoT+"GOIoTP#IoTDevice");
 			parseJSONObjectToJena(myEntity, topLevelNode, jenaModel);
 		} else if (topLevelNode.isArray()) {
 			Resource arrayResource = jenaModel.createResource();
@@ -422,26 +421,21 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		Iterator<Map.Entry<String, JsonNode>> it = objectNode.fields();
 		while (it.hasNext()) {
 			Map.Entry<String, JsonNode> field = it.next();
-			if (field.getKey().equals("id") || field.getKey().equals("href")) {
-				objectResource.addProperty(RDF.type, deviceType);
-				objectResource.addProperty(hasId, instanceType +"/" + field.getValue().asText());
-
-			} else {
-				if (field.getKey().equals("diastolic")) {
-					objectResource.addLiteral(hasDiastolic, field.getValue().asInt());
-				}
-				else if (field.getKey().equals("glucose")) {
-					objectResource.addLiteral(hasGlucose, field.getValue().asInt());
-				}
-				else if (field.getKey().equals("systolic")) {
-					objectResource.addLiteral(hasSystolic, field.getValue().asInt());
-				}
-				else if (field.getKey().equals("pulse")) {
-					objectResource.addLiteral(hasPulse, field.getValue().asInt());
-				}
+			if (field.getKey().equals("diastolic")) {
+				objectResource.addLiteral(hasDiastolic, field.getValue().asInt());
+			}
+			else if (field.getKey().equals("glucose")) {
+				objectResource.addLiteral(hasGlucose, field.getValue().asInt());
+			}
+			else if (field.getKey().equals("systolic")) {
+				objectResource.addLiteral(hasSystolic, field.getValue().asInt());
+			}
+			else if (field.getKey().equals("pulse")) {
+				objectResource.addLiteral(hasPulse, field.getValue().asInt());
 			}
 		}
 	}
+	
 
 	/**
 	 * Method that parses the given {@code jsonNode}, identifies the type of its content
@@ -477,7 +471,8 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 			res.addProperty(hasValue, arrayResource);
 			parseArrayToJena(arrayResource, jsonNode, jenaModel);
 		} else if (jsonNode.isObject()) {
-			Resource objectResource = jenaModel.createResource();
+			Resource objectResource = jenaModel.createResource(instanceType +"/" + jsonNode.get("id").asText());
+			objectResource.addProperty(RDF.type, interIoT+"GOIoTP#IoTDevice");
 			res.addProperty(hasValue, objectResource);
 			parseJSONObjectToJena(objectResource, jsonNode, jenaModel);
 		}
