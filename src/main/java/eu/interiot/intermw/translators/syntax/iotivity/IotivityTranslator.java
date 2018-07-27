@@ -114,9 +114,10 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		hasValue = jenaModel.createProperty(getBaseURI() + "hasValue");
 		hasElement = jenaModel.createProperty(getBaseURI() + "hasElement");
 		hasNumber = jenaModel.createProperty(getBaseURI() + "hasNumber");
-		deviceHasName = jenaModel.createProperty(interIoT + "GOIoTP#hasName");
-		hasLocation = jenaModel.createProperty(interIoT + "GOIoTP#hasLocation");
 		
+		
+		deviceHasName = jenaModel.createProperty(iotivityBaseURI + "hasName");
+		hasLocation = jenaModel.createProperty(iotivityBaseURI + "hasLocation");	
 		hasDiastolic = jenaModel.createProperty(iotivityBaseURI + "hasDiastolic");
 		hasSystolic = jenaModel.createProperty(iotivityBaseURI + "hasSystolic");
 		hasPulse = jenaModel.createProperty(iotivityBaseURI + "hasPulse");

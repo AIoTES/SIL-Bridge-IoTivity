@@ -120,6 +120,7 @@ public class ExampleBridgeTest {
 //        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
 //        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_CREATE_DEVICE));
 //        System.out.println("***************************************************************");
+
 //        
 //        //edit thing
 //        System.out.println("EDIT THING");
@@ -129,14 +130,14 @@ public class ExampleBridgeTest {
 //        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_UPDATE_DEVICE));
 //        System.out.println("***************************************************************");
 
-        // subscribe to thing
-        System.out.println("SUBSCRIBE TO THING");
-        responseMsg = exampleBridge.subscribe(createMessage("messages/thing-subscribe.json"));
-        messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.SUBSCRIBE));
-    	  observe = true;
-        System.out.println("***************************************************************");
+//        // subscribe to thing
+//        System.out.println("SUBSCRIBE TO THING");
+//        responseMsg = exampleBridge.subscribe(createMessage("messages/thing-subscribe.json"));
+//        messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+//        assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.SUBSCRIBE));
+//    	  observe = true;
+//        System.out.println("***************************************************************");
       
         
 //      // unsubscribe from thing
@@ -156,25 +157,25 @@ public class ExampleBridgeTest {
 //        assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.OBSERVATION));
 //        System.out.println("***************************************************************");
         
-        Thread thread = new Thread(){
-            public void run(){
-            try {
-              System.out.println("OBSERVE");
-              Message responseMsg = exampleBridge.observe(createMessage("messages/thing-observe.json"));
-              Set<MessageTypesEnum> messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-              assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-              assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.OBSERVATION));
-              System.out.println("***************************************************************");
-            }
-            catch (Exception e) {};
-            }
-          };
-
-          thread.start();
-
-       if (observe) {
-    	   waitForObervationMessage(publisher, 1000);
-       }
+//        Thread thread = new Thread(){
+//            public void run(){
+//            try {
+//              System.out.println("OBSERVE");
+//              Message responseMsg = exampleBridge.observe(createMessage("messages/thing-observe.json"));
+//              Set<MessageTypesEnum> messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+//              assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+//              assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.OBSERVATION));
+//              System.out.println("***************************************************************");
+//            }
+//            catch (Exception e) {};
+//            }
+//          };
+//
+//          thread.start();
+//
+//       if (observe) {
+//    	   waitForObervationMessage(publisher, 1000);
+//       }
        
 
     }

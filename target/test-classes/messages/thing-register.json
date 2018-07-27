@@ -15,11 +15,11 @@
    }, {
      "@graph" : [ {
        "@id" : "InterIoT:syntax/Iotivity#Instance/device3",
-       "@type" : "InterIoT:GOIoTP#IoTDevice",
-       "InterIoT:GOIoTP#hasLocation" : {
+       "@type" : "IoTivity:IoTDevice",
+       "IoTivity:hasLocation" : {
          "@id" : "http://test.inter-iot.eu/TestLocation"
        },
-       "InterIoT:GOIoTP#hasName" : "http://test.inter-iot.eu",
+       "IoTivity:hasName" : "http://test.inter-iot.eu",
        "http://www.w3.org/ns/sosa/IsHostedBy" : {
          "@id" : "InterIoT:IoTivity"
        }
@@ -28,6 +28,7 @@
    } ],
    "@context" : {
      "InterIoTMsg" : "http://inter-iot.eu/message/",
-     "InterIoT" : "http://inter-iot.eu/"
+     "InterIoT" : "http://inter-iot.eu/",
+     "IoTivity" : "http://inter-iot.eu/syntax/Iotivity#"
    }
  }

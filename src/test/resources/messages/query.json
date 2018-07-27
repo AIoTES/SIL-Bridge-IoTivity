@@ -15,7 +15,7 @@
   }, {
     "@graph" : [ {
       "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/a/light",
-      "@type" : "InterIoT:GOIoTP#IoTDevice",
+      "@type" : "IoTivity:IoTDevice",
       "http://www.w3.org/ns/sosa/isHostedBy" : {
         "@id" : "InterIoT:example-platform1"
       }
@@ -24,6 +24,7 @@
   } ],
   "@context" : {
     "InterIoTMsg" : "http://inter-iot.eu/message/",
-    "InterIoT" : "http://inter-iot.eu/"
+    "InterIoT" : "http://inter-iot.eu/",
+    "IoTivity" : "http://inter-iot.eu/syntax/Iotivity#"
   }
 }

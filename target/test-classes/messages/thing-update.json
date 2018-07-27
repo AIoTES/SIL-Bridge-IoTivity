@@ -15,22 +15,22 @@
   }, {
     "@graph" : [ {
       "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device3",
-      "@type" : "InterIoT:GOIoTP#IoTDevice",
+      "@type" : "IoTivity:IoTDevice",
       "IoTivity:hasDiastolic" : {
               "@type": "http://www.w3.org/2001/XMLSchema#long",
-              "@value": "150"
+              "@value": "120"
       },
       "IoTivity:hasSystolic" : {
               "@type": "http://www.w3.org/2001/XMLSchema#long",
-              "@value": "80"
+              "@value": "60"
       },
       "IoTivity:hasPulse" : {
               "@type": "http://www.w3.org/2001/XMLSchema#long",
-              "@value": "75"
+              "@value": "60"
       },
       "IoTivity:hasGlucose" : {
               "@type": "http://www.w3.org/2001/XMLSchema#long",
-              "@value": "99"
+              "@value": "90"
       },
       "http://www.w3.org/ns/sosa/IsHostedBy" : {
          "@id" : "InterIoT:IoTivity"
