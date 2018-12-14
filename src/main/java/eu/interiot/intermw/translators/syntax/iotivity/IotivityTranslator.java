@@ -20,9 +20,14 @@
  */
 package eu.interiot.intermw.translators.syntax.iotivity;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -34,11 +39,11 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -54,7 +59,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 
-import eu.interiot.intermw.bridge.iotivity.IoTivityUtils;
+import eu.interiot.intermw.ontology.OntologyHandler;
+import eu.interiot.intermw.ontology.entities.Device;
 import eu.interiot.translators.syntax.IllegalSyntaxException;
 import eu.interiot.translators.syntax.SyntacticTranslator;
 
@@ -72,23 +78,12 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	private Resource arrayType;
 	private Resource valueType;
 	private Resource instanceType;
-	private Resource attributeType;
 	private Resource elementType;
-	private Resource deviceType;
 
-	private Property hasAttribute;
-	private Property hasName;
 	private Property hasValue;
 	private Property hasElement;
 	private Property hasNumber;
-	
-	private Property deviceHasName;
-	private Property hasLocation;
-	
-	private Property hasDiastolic;
-	private Property hasSystolic;
-	private Property hasPulse;
-	private Property hasGlucose;
+
 
 
 	/**
@@ -105,23 +100,11 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		arrayType = jenaModel.createResource(getBaseURI() + "Array");
 		valueType = jenaModel.createResource(getBaseURI() + "Value");
 		instanceType = jenaModel.createResource(getBaseURI() + "Instance");
-		attributeType = jenaModel.createResource(getBaseURI() + "Attribute");
 		elementType = jenaModel.createResource(getBaseURI() + "ArrayElement");
-		deviceType = jenaModel.createResource(IoTivityUtils.EntityTypeDevice);
 
-		hasAttribute = jenaModel.createProperty(getBaseURI() + "hasAttribute");
-		hasName = jenaModel.createProperty(getBaseURI() + "hasName");
 		hasValue = jenaModel.createProperty(getBaseURI() + "hasValue");
 		hasElement = jenaModel.createProperty(getBaseURI() + "hasElement");
 		hasNumber = jenaModel.createProperty(getBaseURI() + "hasNumber");
-		
-		
-		deviceHasName = jenaModel.createProperty(iotivityBaseURI + "hasName");
-		hasLocation = jenaModel.createProperty(iotivityBaseURI + "hasLocation");	
-		hasDiastolic = jenaModel.createProperty(iotivityBaseURI + "hasDiastolic");
-		hasSystolic = jenaModel.createProperty(iotivityBaseURI + "hasSystolic");
-		hasPulse = jenaModel.createProperty(iotivityBaseURI + "hasPulse");
-		hasGlucose = jenaModel.createProperty(iotivityBaseURI + "hasGlucose");
 	}
 
 	@Override
@@ -133,17 +116,21 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		Model jenaModel = ModelFactory.createDefaultModel().add(jenaModelParam);
 		ObjectMapper mapper = new ObjectMapper();
 		LinkedList<JsonNode> jsonNodeList = new LinkedList<JsonNode>();
+		//jenaModel.write(System.out, "JSON-LD") ;
 
 		// Find the top-level RDF Entity (the entity that does not appear in Object of
 		// RDF triples)
-		final String topLevelQuery = "SELECT DISTINCT ?top WHERE { ?top ?y ?z MINUS {?a ?b ?top} }";
+		final String topLevelQuery = "SELECT DISTINCT ?top  WHERE { ?top ?y ?z MINUS {?a ?b ?top} }";
 		ResultSet results = executeSelectToJenaModel(jenaModel, topLevelQuery);
 
 		while (results.hasNext()) {
-			RDFNode resultNode = results.next().get("top");
+			QuerySolution qs = results.next();
+			RDFNode resultNode = qs.get("top");
 			StmtIterator typesIt = getTypesOfResource(jenaModel, resultNode.asResource());
-			Set<Resource> types = typesIt.toSet().stream().map(x -> x.getObject().asResource()).collect(Collectors.toSet());
-			if (types.contains(deviceType)) {
+			Set<String> types = typesIt.toSet().stream().map(x -> x.getObject().asResource().getURI()).collect(Collectors.toSet());
+			Set<String> deviceTypes = OntologyHandler.gi().getAllDeviceUris();
+			deviceTypes.retainAll(types);
+			if (!deviceTypes.isEmpty()) {
 				JsonNode someTopLevelNode = parseRDFEntityToJson(resultNode.asResource(), jenaModel, mapper);
 				if (someTopLevelNode != null) {
 					jsonNodeList.add(someTopLevelNode);
@@ -161,6 +148,7 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 				((ArrayNode) topLevelNode).add(node);
 			}
 		}
+		//System.out.println(topLevelNode);
 		return topLevelNode.toString();
 	}
 	
@@ -175,9 +163,14 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 		JsonNode topLevelNode = mapper.readTree(parser);
 		Model jenaModel = ModelFactory.createDefaultModel();
 		if (topLevelNode.isObject()) {
-			Resource myEntity = jenaModel.createResource(instanceType +"/" + topLevelNode.get("id").asText());
-			myEntity.addProperty(RDF.type, interIoT+"GOIoTP#IoTDevice");
-			parseJSONObjectToJena(myEntity, topLevelNode, jenaModel);
+			Resource myEntity;
+			if (topLevelNode.has("id")) {
+				myEntity = jenaModel.createResource(instanceType +"/" + topLevelNode.get("id").asText());
+			}
+			else {
+				myEntity = jenaModel.createResource();
+			}
+			parseJSONObjectToJena(myEntity, topLevelNode, jenaModel, null);
 		} else if (topLevelNode.isArray()) {
 			Resource arrayResource = jenaModel.createResource();
 			arrayResource.addProperty(RDF.type, arrayType);
@@ -187,7 +180,9 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 			valueResource.addProperty(RDF.type, valueType);
 			parseValueToJena(valueResource, topLevelNode, jenaModel);
 		}
-		// jenaModel.write(System.out, "TTL") ;
+		//jenaModel.write(System.out, "TTL") ;
+		jenaModel.write(System.out, "JSON-LD") ;
+
 		return jenaModel;
 	}
 	
@@ -198,12 +193,14 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	 * @param jenaModel: the JENA model
 	 * @param mapper : an object mapper for the creation of the JSON node
 	 * @return a {@code JsonNode} instance
+	 * @throws Exception 
 	 */
-	private JsonNode parseRDFEntityToJson(Resource entityResource, Model jenaModel, ObjectMapper mapper) {
+	private JsonNode parseRDFEntityToJson(Resource entityResource, Model jenaModel, ObjectMapper mapper) throws Exception {
+		Set<String> deviceTypes = OntologyHandler.gi().getAllDeviceUris();
 		StmtIterator typesIt = getTypesOfResource(jenaModel, entityResource);
 		while (typesIt.hasNext()) {
 			Resource type = typesIt.next().getObject().asResource();
-			if (type.equals(instanceType) || type.equals(deviceType)) {
+			if (type.equals(instanceType) || deviceTypes.contains(type.getURI())) {
 				ObjectNode jsonNode = mapper.createObjectNode();
 				parseAttributesToJson(entityResource, jsonNode, jenaModel, mapper);
 				return jsonNode;
@@ -233,8 +230,9 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	 * @param jenaModel: the JENA model
 	 * @param mapper : an object mapper for the creation of the JSON array
 	 * @return an {@code ArrayNode} instance
+	 * @throws Exception 
 	 */
-	private ArrayNode parseArrayEntityToJsonArray(Resource arrayResource, Model jenaModel, ObjectMapper mapper) {
+	private ArrayNode parseArrayEntityToJsonArray(Resource arrayResource, Model jenaModel, ObjectMapper mapper) throws Exception {
 		ArrayNode jsonArrayNode = mapper.createArrayNode();
 
 		StmtIterator arrayElementsIt = getPropertyValuesOfResource(jenaModel, arrayResource, hasElement);
@@ -289,90 +287,72 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	 */
 	private void parseAttributesToJson(Resource entityResource, ObjectNode entity, Model jenaModel,
 			ObjectMapper mapper) {
-		NodeIterator it = jenaModel.listObjectsOfProperty(entityResource, hasAttribute);
-		if (it.hasNext()) {
-			while (it.hasNext()) {
-				RDFNode attribute = it.next();
-				if (attribute.isResource() && attribute.asResource().hasProperty(RDF.type, attributeType)) {
-	
-					String attributeName = "";
-					NodeIterator names = jenaModel.listObjectsOfProperty(attribute.asResource(), hasName);
-					if (names.hasNext()) {
-						attributeName = names.next().toString();
+			StmtIterator x = jenaModel.listStatements();
+			Map<String, List<RDFNode>> map = new HashMap<String, List<RDFNode>>();
+			Set<String> types = new HashSet<String>();
+			String typePropertyLabel = null;
+			while (x.hasNext()) {
+				Statement st = x.next();
+				if (st.getSubject().asResource().equals(entityResource)) {
+					Property property = st.getPredicate();
+					String propertyLocalName = property.getLocalName();
+					if (propertyLocalName.equals("type")) {
+						Set<String> resourceTypes = OntologyHandler.gi().findResourceType(st.getObject().asResource().getURI());
+						types.addAll(resourceTypes);
+						typePropertyLabel = "rt";
 					}
-					if (attributeName.isEmpty())
-						continue;
-	
-					NodeIterator valIterator = jenaModel.listObjectsOfProperty(attribute.asResource(), hasValue);
-					if (valIterator.hasNext()) {
-						RDFNode valueNode = valIterator.next();
-						if (valueNode.isLiteral()) {
-							ValueNode jsonValueNode = parseLiteralToValueNode(valueNode.asLiteral(), mapper);
-							entity.set(attributeName, jsonValueNode);
+					if (!propertyLocalName.equals("type") && !propertyLocalName.equals("IsHostedBy")) {
+						List<RDFNode> nodes = map.get(property.getURI());
+						if (nodes == null) {
+							nodes = new ArrayList<RDFNode>();
 						}
-					} else {
-						ObjectNode attributeNode = mapper.createObjectNode();
-						entity.set(attributeName, attributeNode);
-						parseAttributesToJson(attribute.asResource(), attributeNode, jenaModel, mapper);
+						nodes.add(st.getObject());
+						map.put(property.getURI(), nodes);
 					}
 				}
 			}
-		}
-		else {
-			parseLiteral(entityResource, jenaModel, deviceHasName, entity, mapper, "name");
-			parseLiteral(entityResource, jenaModel, hasDiastolic, entity, mapper, "diastolic");
-			parseLiteral(entityResource, jenaModel, hasSystolic, entity, mapper, "systolic");
-			parseLiteral(entityResource, jenaModel, hasPulse, entity, mapper, "pulse");
-			parseLiteral(entityResource, jenaModel, hasGlucose, entity, mapper, "glucose");
-			parseResource(entityResource, jenaModel, hasLocation, entity, mapper, "location");
 			
-			//add default values
-			entity.set("type", mapper.getNodeFactory().textNode("bloodpressure"));
-			entity.set("model", mapper.getNodeFactory().textNode("Duo ultima"));
-			entity.set("MAC", mapper.getNodeFactory().textNode("00:12:A1:B0:78:14"));
-			entity.set("password", mapper.getNodeFactory().textNode("111111"));
-			entity.set("manufacturer", mapper.getNodeFactory().textNode("Fibaro"));
-		}
-	}
-	
-	/**
-	 * 
-	 * @param entityResource : the RDF entity resource to be parsed
-	 * @param jenaModel: a JENA model
-	 * @param p : the property we want to parse
-	 * @param entity : a JSON entity to be appended with the parsed values
-	 * @param mapper : an object mapper needed for the manipulation of the given JSON entity
-	 * @param fieldName : the name that will ne used as json field 
-	 */
-	private void parseResource(Resource entityResource, Model jenaModel, Property p, ObjectNode entity, ObjectMapper mapper, String fieldName) {
-		NodeIterator it = jenaModel.listObjectsOfProperty(entityResource, p);
-		while (it.hasNext()) {
-			RDFNode attribute = it.next();
-			if (attribute.isResource()) {
-				ValueNode jsonValueNode = mapper.getNodeFactory().textNode(attribute.asResource().toString());
-				entity.set(fieldName, jsonValueNode);
+			if (!types.isEmpty()) {
+				ArrayNode node = mapper.getNodeFactory().arrayNode();
+				entity.set(typePropertyLabel, node);
+				for (String type : types) {
+						node.add(type);
+				}
 			}
-		}
-	}
-	
-	/**
-	 * 
-	 * @param entityResource : the RDF entity resource to be parsed
-	 * @param jenaModel: a JENA model
-	 * @param p : the property we want to parse
-	 * @param entity : a JSON entity to be appended with the parsed values
-	 * @param mapper : an object mapper needed for the manipulation of the given JSON entity
-	 * @param fieldName : the name that will ne used as json field 
-	 */
-	private void parseLiteral(Resource entityResource, Model jenaModel, Property p, ObjectNode entity, ObjectMapper mapper, String fieldName) {
-		NodeIterator it = jenaModel.listObjectsOfProperty(entityResource, p);
-		while (it.hasNext()) {
-			RDFNode attribute = it.next();
-			if (attribute.isLiteral()) {
-				ValueNode jsonValueNode = parseLiteralToValueNode(attribute.asLiteral(), mapper);
-				entity.set(fieldName, jsonValueNode);
+			
+			for (Entry<String, List<RDFNode>> entry : map.entrySet()) {
+				List<RDFNode> list = entry.getValue();
+				if (list.size() > 1) {
+					ArrayNode arrayNode = mapper.getNodeFactory().arrayNode();
+					String key = OntologyHandler.gi().findLabelOfProperty(entry.getKey());				
+					entity.set(key, arrayNode);
+					for (RDFNode node : list) {
+						if (node.isLiteral()) {
+							ValueNode jsonValueNode = parseLiteralToValueNode(node.asLiteral(), mapper);
+							arrayNode.add(jsonValueNode);
+						}
+						else if (node.isResource()) {
+							ObjectNode jsonNode = mapper.createObjectNode();
+							arrayNode.add(jsonNode);
+							parseAttributesToJson(node.asResource(), jsonNode, jenaModel, mapper);
+						}
+					}
+				}
+				else {
+					RDFNode node = list.get(0);
+					if (node.isLiteral()) {
+						ValueNode jsonValueNode = parseLiteralToValueNode(node.asLiteral(), mapper);
+						String key = OntologyHandler.gi().findLabelOfProperty(entry.getKey());		
+						entity.set(key, jsonValueNode);
+					}
+					else if (node.isResource()) {
+						ObjectNode jsonNode = mapper.createObjectNode();
+						String key = OntologyHandler.gi().findLabelOfProperty(entry.getKey());		
+						entity.set(key, jsonNode);
+						parseAttributesToJson(node.asResource(), jsonNode, jenaModel, mapper);
+					}
+				}
 			}
-		}
 	}
 
 	/**
@@ -411,29 +391,119 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 	}
 
 	/**
-	 * Method used for parsing a JSON object (usually representing an IoTivity resource) and creating
+	 * Method used for parsing a JSON object (usually representing an IoTivity device) and creating
 	 * the equivalent JENA resource
 	 * 
-	 * @param objectResource : the JENA resource to be appended with properties and values
+	 * @param objectResource : the JENA resource to be appended with the  and values
 	 * @param objectNode : the JSON node to be parsed
 	 * @param jenaModel : the JENA model used
 	 */
-	private void parseJSONObjectToJena(Resource objectResource, JsonNode objectNode, Model jenaModel) {
+	private void parseJSONObjectToJena(Resource objectResource, JsonNode objectNode, Model jenaModel, String uri) {
+		if (objectNode.has(OntologyHandler.RESOURCE_TYPE)) {
+			JsonNode resourceTypeNode =  objectNode.get(OntologyHandler.RESOURCE_TYPE);
+			Set<String> resourceTypes = new HashSet<String>();
+			for (int i = 0; i < resourceTypeNode.size(); i++) {
+				resourceTypes.add(resourceTypeNode.get(i).asText());
+			}
+			if (OntologyHandler.gi().isDevice(resourceTypes)) {
+				try {
+					for (String rt : resourceTypes) {
+						Device d = OntologyHandler.gi().findDeviceByResourceType(rt);
+						uri = d.getUri();
+						objectResource.addProperty(RDF.type, uri);
+						
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else if (eu.interiot.intermw.ontology.entities.Resource.isResource(resourceTypes)) {
+				try {
+					eu.interiot.intermw.ontology.entities.Resource r = OntologyHandler.gi().findResourceByResourceTypes(resourceTypes);
+					uri = r.getUri();
+					objectResource.addProperty(RDF.type, jenaModel.createResource(r.getUri()));
+					objectResource.addProperty(RDF.type, jenaModel.createResource("http://inter-iot.eu/syntax/Iotivity.owl#Resource"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		Iterator<Map.Entry<String, JsonNode>> it = objectNode.fields();
 		while (it.hasNext()) {
 			Map.Entry<String, JsonNode> field = it.next();
-			if (field.getKey().equals("diastolic")) {
-				objectResource.addLiteral(hasDiastolic, field.getValue().asInt());
+			if (field.getKey().equals(OntologyHandler.RESOURCE_TYPE) || field.getKey().equals("if") || field.getKey().equals("id") || field.getKey().equals("href")) {
+				continue;
 			}
-			else if (field.getKey().equals("glucose")) {
-				objectResource.addLiteral(hasGlucose, field.getValue().asInt());
+			JsonNode json = field.getValue();
+			if (field.getKey().equals("rep")) {
+
+				parseJSONObjectToJena(objectResource, json, jenaModel, uri);
 			}
-			else if (field.getKey().equals("systolic")) {
-				objectResource.addLiteral(hasSystolic, field.getValue().asInt());
+			else {
+
+				String propertyUri = null;
+				if (uri != null) {
+					try {
+						propertyUri = OntologyHandler.gi().findPropertyOfResourceByLabel(uri, field.getKey());
+					} catch (Exception e) {
+					}
+				}
+				if (propertyUri == null) {
+					propertyUri = iotivityBaseURI + field.getKey();
+				}			
+				Property property = jenaModel.createProperty(propertyUri);
+				parseJSONPropertyToJena(objectResource, field.getValue(), property, jenaModel, uri);
 			}
-			else if (field.getKey().equals("pulse")) {
-				objectResource.addLiteral(hasPulse, field.getValue().asInt());
+		}
+	}
+	
+	/**
+	 * Method used for parsing a JSON field (usually representing an IoTivity property) and appending
+	 * the equivalent JENA resource
+	 * 
+	 * @param objectResource : the JENA resource to be appended with the {@code property} and the {@code value}
+	 * @param value : the value of the property
+	 * @param property : the proeprty
+	 * @param jenaModel : the JENA model used
+	 */
+	private void parseJSONPropertyToJena(Resource objectResource, JsonNode value, Property property, Model jenaModel, String uri) {
+		if (value.isArray()) {
+			for (JsonNode element : value) {
+				parseJSONPropertyToJena(objectResource, element, property, jenaModel, uri);
 			}
+		}
+		else if (value.isValueNode()) {
+			parseLiteral(objectResource, property, value);		
+		}
+		else {
+			Resource measurementResource = jenaModel.createResource();
+			objectResource.addProperty(property, measurementResource);
+			parseJSONObjectToJena(measurementResource, value,jenaModel, uri);
+		}
+	}
+
+	
+	/**
+	 * Checks the type of the given value (that is literal) and updates accordingly the given resource
+	 * @param objectResource : the JENA resource to be appended
+	 * @param property : the property
+	 * @param value: the value
+	 */
+	private void parseLiteral(Resource objectResource, Property property, JsonNode value) {
+		if (value.canConvertToInt()) {
+			objectResource.addLiteral(property, value.asInt());
+		}
+		else if (value.isLong()) {
+			objectResource.addLiteral(property, value.asLong());
+		}
+		else if (value.isBoolean()) {
+			objectResource.addLiteral(property, value.asBoolean());
+		}
+		else if (value.isTextual()) {
+			objectResource.addLiteral(property, value.asText());
+		}
+		else if (value.isDouble()) {
+			objectResource.addLiteral(property, value.asDouble());
 		}
 	}
 	
@@ -472,10 +542,15 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 			res.addProperty(hasValue, arrayResource);
 			parseArrayToJena(arrayResource, jsonNode, jenaModel);
 		} else if (jsonNode.isObject()) {
-			Resource objectResource = jenaModel.createResource(instanceType +"/" + jsonNode.get("id").asText());
-			objectResource.addProperty(RDF.type, interIoT+"GOIoTP#IoTDevice");
+			Resource objectResource;
+			if (jsonNode.has("id")) {
+				objectResource = jenaModel.createResource(instanceType +"/" + jsonNode.get("id").asText());
+			}
+			else {
+				objectResource = jenaModel.createResource();
+			}
 			res.addProperty(hasValue, objectResource);
-			parseJSONObjectToJena(objectResource, jsonNode, jenaModel);
+			parseJSONObjectToJena(objectResource, jsonNode, jenaModel, null);
 		}
 	}
 

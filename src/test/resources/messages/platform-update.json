@@ -1,0 +1,98 @@
+{
+  "@graph" : [ {
+    "@graph" : [ {
+      "@id" : "InterIoTMsg:meta/addecd4d-4269-465c-903d-f0eace2bef3c",
+      "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Platform_update" ],
+      "InterIoTMsg:ReceiverPlatformId" : {
+        "@id" : "InterIoT:platforms/IoTivity"
+      },
+      "InterIoTMsg:conversationID" : "conv506c38b5-4ca4-47c3-96b8-1a69f3ca9fba",
+      "InterIoTMsg:dateTimeStamp" : "2018-01-15T21:48:06.735+01:00",
+      "InterIoTMsg:messageID" : "msg06494427-76bb-4ade-8be7-2daaa0d611a1",
+      "InterIoTMsg:clientID" : "myclient"
+    } ],
+    "@id" : "InterIoTMsg:metadata"
+  }, {
+    "@graph" : [ {
+    	"@id" : "InterIoT:platforms/IoTivity",
+    	"@type" : [ "sosa:Platform", "iiot:SoftwarePlatform", "iiot:Semantics", "intermw:IPSMBridgeSemantics" ],
+    	"iiot:hasBaseEndpoint" : "http://localhost:8888",
+    	"iiot:hasLocation" : {
+         	"@id" : "http://test.inter-iot.eu/TestLocation2"
+       	},
+       	"iiot:hasName" : "IoTivity",
+       	"iiot:hasUser" : {
+        	"@id" : "_:b0"
+       	},
+       	"intermw:created" : {
+        	"@type" : "http://www.w3.org/2001/XMLSchema#long",
+        	"@value" : "1543940631024"
+       	},
+       	"intermw:hasUpstreamChannelConfig" : {
+         	"@id" : "_:b2"
+       	},
+       	"intermw:hasDownstreamChannelConfig" : {
+         	"@id" : "_:b3"
+       	}
+    }, {
+       "@id" : "_:b0",
+       "iiotex:hasAuthenticationData" : {
+         "@id" : "_:b1"
+       },
+       "@type" : "iiot:User"
+     }, {
+       "@id" : "_:b1",
+       "intermw:encryptedPassword" : "passwwwssddd",
+       "intermw:encryptionAlgorithm" : "rsaaaa",
+       "intermw:username" : "test1user",
+       "@type" : "iiotex:AuthenticationData"
+     }, {
+       "@id" : "_:b2",
+       "intermw:hasInputAlignment" : {
+         "@id" : "_:b4"
+       },
+       "intermw:hasOutputAlignment" : {
+         "@id" : "_:b5"
+       },
+       "@type" : "intermw:IPSMChannelConfig"
+     } , {
+       "@id" : "_:b3",
+       "intermw:hasInputAlignment" : {
+         "@id" : "_:b6"
+       },
+       "intermw:hasOutputAlignment" : {
+         "@id" : "_:b7"
+       },
+       "@type" : "intermw:IPSMChannelConfig"
+     }, {
+       "@id" : "_:b4",
+       "iiot:hasName" : "upstream input name",
+       "iiot:hasVersion" : "ui1",
+        "@type" : "InterIoT:INTERMW#IPSMAlignment"
+     }, {
+       "@id" : "_:b5",
+       "iiot:hasName" : "upstream output name",
+       "iiot:hasVersion" : "uo1",
+        "@type" : "InterIoT:INTERMW#IPSMAlignment"
+     }, {
+       "@id" : "_:b6",
+       "iiot:hasName" : "downstream input name",
+       "iiot:hasVersion" : "di1",
+        "@type" : "InterIoT:INTERMW#IPSMAlignment"
+     }, {
+       "@id" : "_:b7",
+       "iiot:hasName" : "downstream output name",
+       "iiot:hasVersion" : "do1",
+        "@type" : "InterIoT:INTERMW#IPSMAlignment"
+     }],
+    "@id" : "InterIoTMsg:payload"
+  } ],
+  "@context" : {
+    "InterIoTMsg" : "http://inter-iot.eu/message/",
+    "InterIoT" : "http://inter-iot.eu/",
+    "iiot" : "http://inter-iot.eu/GOIoTP#",
+    "sosa" : "http://www.w3.org/ns/sosa/",
+    "intermw" : "http://inter-iot.eu/INTERMW#",
+    "iiotex" : "http://inter-iot.eu/GOIoTPex#"
+  }
+}

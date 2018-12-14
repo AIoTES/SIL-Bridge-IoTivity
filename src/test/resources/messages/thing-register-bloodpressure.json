@@ -1,0 +1,69 @@
+ {
+   "@graph" : [ {
+     "@graph" : [ {
+       "@id" : "InterIoTMsg:meta/8fc4a7ed-d48c-44b0-8ae2-186ad24d88f4",
+       "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Platform_create_Device" ],
+       "InterIoTMsg:ReceiverPlatformId" : {
+         "@id" : "InterIoT:platforms/IoTivity"
+       },
+       "InterIoTMsg:clientID" : "myclient",
+       "InterIoTMsg:conversationID" : "conv66c69530-3fbb-4bf1-ac07-d94656ff1178",
+       "InterIoTMsg:dateTimeStamp" : "2018-07-09T08:23:20.657Z",
+       "InterIoTMsg:messageID" : "msgffd95f48-f4de-4e36-adbe-a21dc4517214"
+     } ],
+     "@id" : "InterIoTMsg:metadata"
+   }, {
+     "@graph" : [ {
+    	"@id" : "_:b0",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#BloodPressure" ],
+    	"diastolic" : 121,
+    	"systolic" : 81
+  	 },  {
+    	"@id" : "_:b1",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#Glucose" ],
+    	"glucose" : 90
+  	 },  {
+    	"@id" : "_:b2",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#PulseRate" ],
+    	"pulserate" : 81
+  	 },  {
+    	"@id" : "_:b3",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#Timestamp" ],
+    	"timestamp" : "2018-11-30T12:42Z"
+  	 },	{
+    	"@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test#13",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Device", "http://inter-iot.eu/syntax/Iotivity.owl#ForaBloodPressureDevice" ],
+    	"hasResource" : [ "_:b0" , "_:b1" , "_:b2" , "_:b3"]
+    	
+  	 } ],
+     "@id" : "InterIoTMsg:payload"
+   } ],
+   "@context" : {
+     "InterIoTMsg" : "http://inter-iot.eu/message/",
+     "InterIoT" : "http://inter-iot.eu/",
+     "IoTivity" : "http://inter-iot.eu/syntax/Iotivity#",
+     "hasResource" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#hasResource",
+      	"@type" : "@id"
+     },
+     "diastolic" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#diastolic",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#int"
+     },
+     "systolic" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#systolic",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#int"
+     },
+     "pulserate" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#pulserate",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#int"
+     },
+     "glucose" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#glucose",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#double"
+     },
+     "timestamp" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#timestamp"
+     }
+   }
+ }

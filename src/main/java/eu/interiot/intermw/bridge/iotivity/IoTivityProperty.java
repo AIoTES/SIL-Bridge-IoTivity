@@ -8,5 +8,4 @@ public class IoTivityProperty {
 	public static final String SERVER_IP = "iotivity.server.ip";
 	public static final String PROXY_IP = "proxy.ip";
 	public static final String SERVER_PORT = "iotivity.server.port";
-	public static final String SERVER_ROOT_URL = "iotivity.server.root.url";
 }

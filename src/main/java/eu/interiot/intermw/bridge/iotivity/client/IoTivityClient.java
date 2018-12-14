@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.eclipse.californium.core.CoapHandler;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 /**
  * 
  * Interface that contains that contains all needed methods by the bridge
@@ -40,7 +40,7 @@ public interface IoTivityClient {
 	 * 
 	 * @throws Exception in case the client was not able to connect to the server
 	 */
-	public void discoverServer() throws Exception;
+	public JsonElement discoverServer() throws Exception;
 	
 	/**
 	 * Method for creating a new resource on the IoTivity server
@@ -75,7 +75,7 @@ public interface IoTivityClient {
 	 * @param resource: the URL of the resource to be retrieved (e.g. /a/light)
 	 * @throws Exception in case the GET request was not successful
 	 */
-	public JsonObject getResource(final String resource) throws Exception;
+	public JsonElement getResource(final String resource) throws Exception;
 	
 	/**
 	 * Method for assigning an observer on a resource on an IoTivity server
@@ -101,6 +101,12 @@ public interface IoTivityClient {
 	public void setPort(int port);
 	
 	/**
+	 * Method for getting the port used by the IoTivity server
+	 * @return port
+	 */
+	public int getPort() throws Exception;
+	
+	/**
 	 * Method that checks if platform is registered. If not an exception is thrown
 	 */
 	public void isPlatformRegistered() throws Exception;
@@ -112,4 +118,8 @@ public interface IoTivityClient {
 	 * @param rootURL: the root url that contains all resources
 	 */
 	public String findResourceURL(String id, String rootURL) throws Exception;
+	
+	public Map<String, JsonElement> listDevices() throws Exception;
+	
+	public void setIp(String ip);
 }

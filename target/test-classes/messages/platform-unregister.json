@@ -4,7 +4,7 @@
       "@id" : "InterIoTMsg:meta/addecd4d-4269-465c-903d-f0eace2bef3c",
       "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Platform_unregister" ],
       "InterIoTMsg:ReceiverPlatformId" : {
-        "@id" : "InterIoT:IoTivity"
+        "@id" : "InterIoT:platforms/IoTivity"
       },
       "InterIoTMsg:conversationID" : "conv506c38b5-4ca4-47c3-96b8-1a69f3ca9fba",
       "InterIoTMsg:dateTimeStamp" : "2018-01-15T21:48:06.735+01:00",

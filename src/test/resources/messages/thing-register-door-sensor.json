@@ -1,0 +1,49 @@
+ {
+   "@graph" : [ {
+     "@graph" : [ {
+       "@id" : "InterIoTMsg:meta/8fc4a7ed-d48c-44b0-8ae2-186ad24d88f4",
+       "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Platform_create_Device" ],
+       "InterIoTMsg:ReceiverPlatformId" : {
+         "@id" : "InterIoT:platforms/IoTivity"
+       },
+       "InterIoTMsg:clientID" : "myclient",
+       "InterIoTMsg:conversationID" : "conv66c69530-3fbb-4bf1-ac07-d94656ff1178",
+       "InterIoTMsg:dateTimeStamp" : "2018-07-09T08:23:20.657Z",
+       "InterIoTMsg:messageID" : "msgffd95f48-f4de-4e36-adbe-a21dc4517214"
+     } ],
+     "@id" : "InterIoTMsg:metadata"
+   }, {
+     "@graph" : [ {
+    	"@id" : "_:b0",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#Door" ],
+    	"openState" : "Open"
+  	 }, {
+    	"@id" : "_:b1",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#Temperature" ],
+    	"temperature" : 25 ,
+    	"temperatureUnits" : "C"
+  	 },  {
+    	"@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test#11",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Device", "http://inter-iot.eu/syntax/Iotivity.owl#FibaroDoorDevice" ],
+    	"hasResource" : [ "_:b0", "_:b1" ]
+    	
+  	 } ],
+     "@id" : "InterIoTMsg:payload"
+   } ],
+   "@context" : {
+     "InterIoTMsg" : "http://inter-iot.eu/message/",
+     "InterIoT" : "http://inter-iot.eu/",
+     "IoTivity" : "http://inter-iot.eu/syntax/Iotivity#",
+     "hasResource" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#hasResource",
+      	"@type" : "@id"
+     },
+     "temperature" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#temperature",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#long"
+     },
+      "openState" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#openState"
+     }
+   }
+ }

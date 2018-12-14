@@ -23,6 +23,9 @@ package eu.interiot.intermw.bridge.iotivity.client.utils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,6 +34,7 @@ import co.nstant.in.cbor.CborBuilder;
 import co.nstant.in.cbor.CborDecoder;
 import co.nstant.in.cbor.CborEncoder;
 import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.builder.ArrayBuilder;
 import co.nstant.in.cbor.builder.MapBuilder;
 import co.nstant.in.cbor.model.DataItem;
 
@@ -127,7 +131,40 @@ public class EncodingUtils {
 		try { return mapBuilder.put(entry.getKey(), (long) entry.getValue());} catch (Exception e){};
 		try { return mapBuilder.put(entry.getKey(), (String) entry.getValue());} catch (Exception e){};
 		try { return mapBuilder.put(entry.getKey(), (int) entry.getValue());} catch (Exception e){};
-		throw new Exception("Unsupported type of the value of key: " + entry.getKey());	
+		if (entry.getValue() instanceof ArrayList) {
+			ArrayBuilder<MapBuilder<CborBuilder>> array = mapBuilder.putArray(entry.getKey());
+			ArrayList list = (ArrayList) entry.getValue();
+			Iterator it = list.iterator();
+			while (it.hasNext()) {
+				Object obj = it.next();
+				if (obj instanceof LinkedHashMap) {
+					Map listElement = (LinkedHashMap) obj;
+					List<DataItem> dataItems = createDataItemList(listElement);
+					for (DataItem d : dataItems) {
+						array.add(d);
+					}
+				}
+				else {
+					array.add((String) obj);
+				}
+			}
+			return mapBuilder;
+		}
+		if (entry.getValue() instanceof LinkedHashMap) {
+			handleMap(mapBuilder, entry.getValue(), entry.getKey());
+			return mapBuilder;
+		}
+		System.out.println(entry.getValue().getClass());
+		throw new Exception("Unsupported type of the value of key: " + entry.getKey() + " - " + entry.getValue());	
+	}
+	
+	private static void handleMap(MapBuilder<CborBuilder> mapBuilder, Object obj, String entryKey) throws Exception{
+		Map listElement = (LinkedHashMap) obj;
+		List<DataItem> dataItems = createDataItemList(listElement);
+		ArrayBuilder<MapBuilder<CborBuilder>> array = mapBuilder.putArray(entryKey);
+		for (DataItem d : dataItems) {
+			array.add(d);
+		}
 	}
 	
 	/**

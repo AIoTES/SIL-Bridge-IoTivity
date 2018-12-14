@@ -1,7 +1,9 @@
 C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\client\impls\IoTivityCoapClientImpl.java
+C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\client\IoTivityCoapHandler.java
 C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\IoTivityBridge.java
 C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\IoTivityUtils.java
 C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\client\IoTivityClient.java
+C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\IoTivityProperty.java
 C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\translators\syntax\iotivity\IotivityTranslator.java
-C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\MyApp.java
 C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\client\utils\EncodingUtils.java
+C:\Users\stavrotheodoros\eclipse-workspace\iotivity\src\main\java\eu\interiot\intermw\bridge\iotivity\client\utils\HttpClient.java

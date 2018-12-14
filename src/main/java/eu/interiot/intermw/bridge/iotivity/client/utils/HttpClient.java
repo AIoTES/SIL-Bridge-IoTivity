@@ -43,6 +43,7 @@ public class HttpClient {
 	 */
 	private static String sendGet(String url) throws Exception {		
 		URL obj = new URL(url);
+		System.out.println(url);
 		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 		con.setRequestMethod("GET");
 

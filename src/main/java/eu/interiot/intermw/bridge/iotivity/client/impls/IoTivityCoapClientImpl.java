@@ -23,7 +23,6 @@ package eu.interiot.intermw.bridge.iotivity.client.impls;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapHandler;
@@ -32,15 +31,17 @@ import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import eu.interiot.intermw.bridge.BridgeConfiguration;
 import eu.interiot.intermw.bridge.exceptions.BridgeException;
 import eu.interiot.intermw.bridge.iotivity.IoTivityProperty;
 import eu.interiot.intermw.bridge.iotivity.IoTivityUtils;
 import eu.interiot.intermw.bridge.iotivity.client.IoTivityClient;
 import eu.interiot.intermw.bridge.iotivity.client.utils.EncodingUtils;
 import eu.interiot.intermw.bridge.iotivity.client.utils.HttpClient;
-import eu.interiot.intermw.commons.interfaces.Configuration;
 
 /**
  * 
@@ -68,22 +69,23 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @param configuration : the configuration parameters of the bridge
 	 * @throws BridgeException in case there is a missing configuration property
 	 */
-	public IoTivityCoapClientImpl(Configuration configuration) throws BridgeException {
-		super();
-		Properties properties = configuration.getProperties();
-		ip = properties.getProperty(IoTivityProperty.SERVER_IP);
-		proxyIp = properties.getProperty(IoTivityProperty.PROXY_IP);
-		String iotivityServerPort = properties.getProperty(IoTivityProperty.SERVER_PORT);
-		
+	public IoTivityCoapClientImpl(String ip, BridgeConfiguration configuration) throws BridgeException {
+		this(ip, configuration.getProperties().getProperty(IoTivityProperty.PROXY_IP),
+				configuration.getProperties().getProperty(IoTivityProperty.SERVER_PORT));
+	}
+	
+	public IoTivityCoapClientImpl(String ip, String proxyIp, String iotivityServerPort) throws BridgeException {
         if (ip == null) {
             throw new BridgeException("Invalid bridge configuration: property '"+IoTivityProperty.SERVER_IP+"' is not set.");
         }
         if (proxyIp == null && iotivityServerPort == null) {
             throw new BridgeException("Invalid bridge configuration: define '"+IoTivityProperty.PROXY_IP+"' or '"+IoTivityProperty.SERVER_PORT+"'.");
         }
-        if (!iotivityServerPort.isEmpty() && iotivityServerPort != null) {
+        if (iotivityServerPort != null && !iotivityServerPort.isEmpty()) {
 			hardCodedPort = Integer.parseInt(iotivityServerPort);
 		}
+        setIp(ip);
+        this.proxyIp = proxyIp;
 	}
 
 	/**
@@ -115,7 +117,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 		CoapClient client = createCoapClient(createResourceURL(resource));
 		byte[] resourceEncoded = EncodingUtils.encodeResourceToCbor(attributesMap);
 		CoapResponse response = client.post(resourceEncoded, MediaTypeRegistry.APPLICATION_CBOR);
-		if (response != null) {
+		if (response != null && response.getPayload() != null) {
 			EncodingUtils.printCborEncodedBytes(response.getPayload());
 		}
 	}
@@ -142,11 +144,11 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @throws Exception
 	 */
 	@Override
-	public JsonObject getResource(final String resource) throws Exception{
+	public JsonElement getResource(final String resource) throws Exception{
 		CoapClient client = createCoapClient(createResourceURL(resource));
 		CoapResponse response = client.get();
-		if (response != null) {
-			JsonObject json = EncodingUtils.coapResponseToJson(response.getPayload()).getAsJsonObject();
+		if (response != null && response.getPayload() != null) {
+			JsonElement json = EncodingUtils.coapResponseToJson(response.getPayload());
 			System.out.println(json);
 			return json;
 		}
@@ -160,9 +162,9 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @throws Exception
 	 */
 	@Override
-	public void discoverServer() throws Exception{
-		if (JAVA_VERSION < 1.8) {
-			CoapClient client = createCoapClient(createDiscoveryURL());
+	public JsonElement discoverServer() throws Exception{
+		CoapClient client = createCoapClient(createDiscoveryURL());
+		if (JAVA_VERSION < 1.8) {			
 			CoapResponse response = client.discoverPort();
 			port = response.advanced().getSourcePort();
 		}
@@ -176,6 +178,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 			
 		}
 		System.out.println("PORT: " + port);
+		return null;
 	}
 	
 	/**
@@ -227,8 +230,8 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 */
 	@Override
 	public String findResourceURL(String id, String rootURL) throws Exception{
-		JsonObject allDevices = getResource(rootURL);
-		JsonArray deviceArray = IoTivityUtils.getDeviceList(allDevices).getAsJsonArray();
+		JsonElement allDevices = getResource(rootURL);
+		JsonArray deviceArray = IoTivityUtils.getDeviceList(allDevices.getAsJsonObject()).getAsJsonArray();
 		for (int i = 0; i < deviceArray.size(); i++) {
 			JsonObject device = deviceArray.get(i).getAsJsonObject();
 			if (device.get("id").getAsString().equals(id)) {
@@ -283,7 +286,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 * @return the port of the IoTivity server
 	 * @throws Exception in case the port is not known
 	 */
-	private int getPort() throws Exception{
+	public int getPort() throws Exception{
 		if (port == 0){
 			throw new Exception("The port of the server is not known. You must execute a discovery first");
 		} 
@@ -317,13 +320,14 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	 */
 	private CoapClient createCoapClient(String resource){
 		CoapClient client = new CoapClient(resource);
-		client.setTimeout(5000);
+		client.setTimeout(new Long(5000));
 		return client;
 	}
 
 	public void setPort(int port) {
 		this.port = port;
 	}
+	
 	
 	/**
 	 * Finds the Java version of the system 
@@ -336,4 +340,28 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	    pos = version.indexOf('.', pos+1);
 	    return Double.parseDouble (version.substring (0, pos));
 	}
+	
+	public Map<String, JsonElement> listDevices() throws Exception{
+		String responseBody = getResource("/oic/res?rt=oic.wk.d").toString();
+		JsonArray responseList = IoTivityUtils.getDeviceList(new JsonParser().parse(responseBody));
+		Map<String, JsonElement> map = new HashMap<String, JsonElement>();
+		for (JsonElement j :  responseList) {
+			try {
+				String resourceHref = j.getAsJsonObject().get("href").getAsString()+"?if=oic.if.ll";
+				System.out.println(resourceHref);
+				JsonElement device = getResource(resourceHref);
+				map.put(device.getAsJsonObject().get("id").getAsString(), device);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return map;
+	}
+
+	
+	public void setIp(String ip) {
+        ip = ip.replace("http://", "");
+        this.ip = ip;
+	}	
 }

@@ -4,7 +4,7 @@
        "@id" : "InterIoTMsg:meta/8fc4a7ed-d48c-44b0-8ae2-186ad24d88f4",
        "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Platform_create_Device" ],
        "InterIoTMsg:ReceiverPlatformId" : {
-         "@id" : "InterIoT:IoTivity"
+         "@id" : "InterIoT:platforms/IoTivity"
        },
        "InterIoTMsg:clientID" : "myclient",
        "InterIoTMsg:conversationID" : "conv66c69530-3fbb-4bf1-ac07-d94656ff1178",
@@ -14,21 +14,48 @@
      "@id" : "InterIoTMsg:metadata"
    }, {
      "@graph" : [ {
-       "@id" : "InterIoT:syntax/Iotivity#Instance/device3",
-       "@type" : "IoTivity:IoTDevice",
-       "IoTivity:hasLocation" : {
-         "@id" : "http://test.inter-iot.eu/TestLocation"
-       },
-       "IoTivity:hasName" : "http://test.inter-iot.eu",
-       "http://www.w3.org/ns/sosa/IsHostedBy" : {
-         "@id" : "InterIoT:IoTivity"
-       }
-     } ],
+    	"@id" : "_:b0",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#PresenceSensor" ],
+    	"sensorValue" : true
+  	 }, {
+    	"@id" : "_:b1",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#Temperature" ],
+    	"temperature" : 32 ,
+    	"temperatureUnits" : "C"
+  	 }, {
+    	"@id" : "_:b2",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#IlluminanceSensor" ],
+    	"illuminance" : "9"
+  	 }, {
+    	"@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test#10",
+    	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Device", "http://inter-iot.eu/syntax/Iotivity.owl#FibaroMotionDevice" ],
+    	"hasResource" : [ "_:b0", "_:b1", "_:b2" ]
+    	
+  	 } ],
      "@id" : "InterIoTMsg:payload"
    } ],
    "@context" : {
      "InterIoTMsg" : "http://inter-iot.eu/message/",
      "InterIoT" : "http://inter-iot.eu/",
-     "IoTivity" : "http://inter-iot.eu/syntax/Iotivity#"
+     "IoTivity" : "http://inter-iot.eu/syntax/Iotivity#",
+     "hasResource" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#hasResource",
+      	"@type" : "@id"
+     },
+     "temperature" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#temperature",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#long"
+     },
+      "illuminance" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#illuminance",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#long"
+     },
+      "temperatureUnits" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#temperatureUnits"
+     },
+      "sensorValue" : {
+      	"@id" : "http://inter-iot.eu/syntax/Iotivity.owl#sensorValue",
+      	"@type" : "http://www.w3.org/2001/XMLSchema#boolean"
+     }
    }
  }

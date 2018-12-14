@@ -4,7 +4,7 @@
       "@id" : "InterIoTMsg:meta/70b5d0fc-699f-4915-9176-5960ed1d9b95",
       "@type" : [ "InterIoTMsg:meta", "InterIoTMsg:Platform_delete_Device" ],
       "InterIoTMsg:ReceiverPlatformId" : {
-        "@id" : "InterIoT:IoTivity"
+        "@id" : "InterIoT:platforms/IoTivity"
       },
       "InterIoTMsg:conversationID" : "conv1b30d712-c687-459a-88ee-21dbbeeb4266",
       "InterIoTMsg:dateTimeStamp" : "2018-01-15T21:48:55.192+01:00",
@@ -14,8 +14,8 @@
     "@id" : "InterIoTMsg:metadata"
   }, {
     "@graph" : [ {
-      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/device4",
-      "@type" : "IoTivity:IoTDevice",
+      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test#6",
+      "@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Device", "http://inter-iot.eu/syntax/Iotivity.owl#FibaroDoorDevice" ],
       "http://www.w3.org/ns/sosa/isHostedBy" : {
         "@id" : "InterIoT:IoTivity"
       }

@@ -20,14 +20,14 @@
  */
 package eu.interiot.intermw.bridge.iotivity;
 
+import eu.interiot.intermw.bridge.BridgeConfiguration;
 import eu.interiot.intermw.bridge.abstracts.AbstractBridge;
 import eu.interiot.intermw.bridge.annotations.Bridge;
-import eu.interiot.intermw.bridge.exceptions.BridgeException;
 import eu.interiot.intermw.bridge.iotivity.client.IoTivityClient;
 import eu.interiot.intermw.bridge.iotivity.client.IoTivityCoapHandler;
 import eu.interiot.intermw.bridge.iotivity.client.impls.IoTivityCoapClientImpl;
+import eu.interiot.intermw.bridge.iotivity.scheduler.DeviceCheckScheduler;
 import eu.interiot.intermw.commons.exceptions.MiddlewareException;
-import eu.interiot.intermw.commons.interfaces.Configuration;
 import eu.interiot.intermw.commons.model.Platform;
 import eu.interiot.intermw.translators.syntax.iotivity.IotivityTranslator;
 import eu.interiot.message.ID.EntityID;
@@ -40,16 +40,17 @@ import eu.interiot.message.managers.URI.URIManagerMessageMetadata.MessageTypesEn
 import eu.interiot.message.metadata.PlatformMessageMetadata;
 
 import org.apache.jena.rdf.model.Model;
-
 import org.eclipse.californium.core.CoapHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
 
+import java.net.MalformedURLException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,48 +58,89 @@ import java.util.Set;
 public class IoTivityBridge extends AbstractBridge {
 
 	private final Logger logger = LoggerFactory.getLogger(IoTivityBridge.class);
-	private IoTivityClient iotivityClient = null;
 	private IotivityTranslator translator = new IotivityTranslator();
-	private String rootURL;
+	private BridgeConfiguration configuration;
+    private String url;
+	private IoTivityClient iotivityClient = null;
+	private DeviceCheckScheduler scheduler = null;
 
-	public IoTivityBridge(Configuration configuration, Platform platform) throws MiddlewareException {
+	public IoTivityBridge(BridgeConfiguration configuration, Platform platform) throws MiddlewareException {
 		super(configuration, platform);
 		logger.debug("Example bridge is initializing...");
-		
-		rootURL = configuration.getProperties().getProperty(IoTivityProperty.SERVER_ROOT_URL);
-        if (rootURL == null) {
-            throw new BridgeException("Invalid bridge configuration: property '"+IoTivityProperty.SERVER_ROOT_URL+"' is not set.");
+		if (platform.getBaseEndpoint() != null) {
+			url = platform.getBaseEndpoint().toString();
+		}
+	    if (Strings.isNullOrEmpty(url)) {
+	    	url = configuration.getProperties().getProperty(IoTivityProperty.SERVER_IP);
+	    }
+		String proxyIp = configuration.getProperties().getProperty(IoTivityProperty.PROXY_IP);
+		String iotivityServerPort = configuration.getProperties().getProperty(IoTivityProperty.SERVER_PORT);
+        if (Strings.isNullOrEmpty(url)) {
+            throw new MiddlewareException("Invalid bridge configuration: property '"+IoTivityProperty.SERVER_IP+"' is not set.");
         }
-        iotivityClient = new IoTivityCoapClientImpl(configuration);
-		logger.info("Example bridge has been initialized successfully.");
+        if (Strings.isNullOrEmpty(proxyIp) && Strings.isNullOrEmpty(iotivityServerPort)) {
+        	proxyIp = url;
+            //throw new MiddlewareException("Invalid bridge configuration: define '"+IoTivityProperty.PROXY_IP+"' or '"+IoTivityProperty.SERVER_PORT+"'.");
+        }
+        if (!Strings.isNullOrEmpty(iotivityServerPort) && !iotivityServerPort.isEmpty()) {
+			Integer.parseInt(iotivityServerPort);
+		}
+		this.configuration = configuration;
+		logger.info("Bridge has been initialized successfully.");
 	}
 
 	@Override
+	//DONE
 	public Message registerPlatform(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
-		String platformId = platform.getPlatformId();		
-		logger.debug("Registering platform {}...", platformId);
 		try {
+			logger.debug("Registering platform {}...", platform.getPlatformId());
+			iotivityClient  = new IoTivityCoapClientImpl(url, configuration);			
+			updatePlatform(message.getPayload());
 			iotivityClient.discoverServer();
-			logger.debug("Platform {} has been registered.", platformId);
+			logger.debug("Platform {} has been registered.", platform.getPlatformId());
 		} catch (Exception e) {
 			logger.error("Register Platform  " + e);
 			e.printStackTrace();
 			IoTivityUtils.createErrorResponseMessage(responseMessage, e);
 		}
 		return responseMessage;
-		
-		
+	}
+	
+	@Override
+	//DONE
+	public Message updatePlatform(Message message) throws Exception {
+		Message responseMessage = createResponseMessage(message);
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}
+		updatePlatform(message.getPayload());
+		return responseMessage;
+	}
+	
+	/**
+	 * Method that parses the given payload, updates the platform instance and the iotivity client
+	 * @param messagePayload
+	 * @throws MalformedURLException
+	 */
+	private void updatePlatform(MessagePayload messagePayload) throws MalformedURLException {
+		platform = IoTivityUtils.updatePlatform(platform, messagePayload);
+		if (platform.getBaseEndpoint() != null) {
+			url = platform.getBaseEndpoint().toString();
+		}
+		iotivityClient.setIp(url);
 	}
 
 	@Override
+	//DONE
 	public Message unregisterPlatform(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		String platformId = platform.getPlatformId();	
 		logger.debug("Unregistering platform {}...", platformId);
 		try {
+			iotivityClient = null;
 			logger.debug("Platform {} has been unregistered.", platformId);
-			iotivityClient.setPort(0);
 		} catch (Exception e) {
 			logger.error("Unregister Platform  " + e);
 			e.printStackTrace();
@@ -108,8 +150,13 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
+	//DONE
 	public Message subscribe(Message message) throws Exception {	
 		Message responseMessage = createResponseMessage(message);
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
 		Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 		
 		if (entities.isEmpty()) {
@@ -122,6 +169,7 @@ public class IoTivityBridge extends AbstractBridge {
 		String conversationId = message.getMetadata().getConversationId().orElse(null);
 
 		logger.debug("Subscribing to thing {} using conversationId {}...", thingId, conversationId);
+		Map<String, JsonElement> deviceMap = iotivityClient.listDevices();
 
 		try {
 			iotivityClient.isPlatformRegistered();
@@ -134,8 +182,12 @@ public class IoTivityBridge extends AbstractBridge {
 
 			CoapHandler handler = new IoTivityCoapHandler(metadata, translator, publisher);
 			String id = IoTivityUtils.getThingId(thingId);
-			String resource = iotivityClient.findResourceURL(id, rootURL);
-			iotivityClient.observeResource(resource, handler);
+			JsonElement deviceJsonElement = deviceMap.get(id);
+			if (deviceJsonElement == null) {
+				throw new Exception("There is no device with id '"+id+"' to sunscribe to");
+			}
+			String href = deviceJsonElement.getAsJsonObject().get("href").getAsString();
+			iotivityClient.observeResource(href, handler);
 		} catch (Exception e) {
 			logger.error("Error subscribing: " + e.getMessage());
 			IoTivityUtils.createErrorResponseMessage(responseMessage, e);
@@ -144,14 +196,25 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
+	//DONE
 	public Message unsubscribe(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);	
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
 		Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
+		Map<String, JsonElement> deviceMap = iotivityClient.listDevices();
 		try{
 			for (String entityId : entities) {
 				String id = IoTivityUtils.getThingId(entityId);
 				logger.info("Unsubscribing from thing {}...", entityId);
-				iotivityClient.stopObservingResource(iotivityClient.findResourceURL(id, rootURL));
+				JsonElement deviceJsonElement = deviceMap.get(id);
+				if (deviceJsonElement == null) {
+					return responseMessage;
+				}
+				String href = deviceJsonElement.getAsJsonObject().get("href").getAsString();
+				iotivityClient.stopObservingResource(href);
 			}
 		} catch (Exception e){ 
 			logger.error("Error unsubscribing: " + e.getMessage());
@@ -164,43 +227,69 @@ public class IoTivityBridge extends AbstractBridge {
 	@Override
 	public Message query(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
 		try{
-			Set<String> deviceIds = IoTivityUtils.getDeviceIDsFromPayload(message);
-			JsonArray array = new JsonArray();
-			for (String deviceId : deviceIds){
-				String id = IoTivityUtils.getThingId(deviceId);
-				String resource = iotivityClient.findResourceURL(id, rootURL);
-				JsonObject responseBody = iotivityClient.getResource(resource);
-				array.add(responseBody);
+			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);			
+			//get a map that contains all registered devices on the server
+			Map<String, JsonElement> deviceMap = iotivityClient.listDevices();
+			if (entities.size() == 1) {
+				for (String entityId : entities) {
+					responseMessage = createResponseMessage(message);
+					String id = IoTivityUtils.getThingId(entityId);
+					JsonElement deviceJsonElement = deviceMap.get(id);
+					if (deviceJsonElement == null) {
+						throw new Exception("There is no device with given id : " + entityId);
+					}
+					String href = deviceJsonElement.getAsJsonObject().get("href").getAsString();
+					logger.debug("Querying thing {}...", entityId);				
+					JsonElement resource = iotivityClient.getResource(href);
+					Model translatedModel = translator.toJenaModel(resource.toString());
+					MessagePayload responsePayload = new MessagePayload(translatedModel);
+					responseMessage.setPayload(responsePayload);
+				}
 			}
-			if (array.size() > 0) {
-				Model translatedModel = translator.toJenaModel(array.toString());
+			else if (entities.size() == 0) {
+				JsonArray allDeviceList = new JsonArray();
+				for (JsonElement d : deviceMap.values()) {
+						allDeviceList.add(d);
+				}
+				Model translatedModel = translator.toJenaModel(allDeviceList.toString());
 				MessagePayload responsePayload = new MessagePayload(translatedModel);
 				responseMessage.setPayload(responsePayload);
 			}
+			else {
+				IoTivityUtils.createErrorResponseMessage(responseMessage, new Exception("Current version does not support querying with multiple ids"));
+				return responseMessage;
+			}
 			responseMessage.getMetadata().setStatus("OK");
-			publisher.publish(responseMessage);
-		}
-		catch (Exception e) {
-			logger.error("Error in query: " + e.getMessage());
+    		logger.debug("Success");
+    	}catch(Exception e){
+    		logger.error("Error querying device: " + e.getMessage());
 			e.printStackTrace();
 			IoTivityUtils.createErrorResponseMessage(responseMessage, e);
-		}
+    	}
 		return responseMessage;
 	}
 
 	@Override
+	//DONE
 	public Message listDevices(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
-		try{
-			iotivityClient.isPlatformRegistered();
-			String responseBody = iotivityClient.getResource(rootURL).toString();
-			String responseList = IoTivityUtils.getDeviceList(new JsonParser().parse(responseBody).getAsJsonObject()).toString();
-			Model translatedModel = translator.toJenaModel(responseList);
-			MessagePayload responsePayload = new MessagePayload(translatedModel);
-			//translatedModel.write(System.out, "TTL") ;
-			responseMessage.setPayload(responsePayload);
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
+		
+		try {
+			deviceRegistryInitialization(message);			
+			scheduler = new DeviceCheckScheduler(iotivityClient, new HashMap<String, JsonElement>(), message, publisher, platform.getPlatformId());
+			scheduler.check();
+			
 			responseMessage.getMetadata().setStatus("OK");
+			logger.info("Completed listDevices");			
 		}
 		catch (Exception e) {
 			logger.error("Error in query: " + e.getMessage());
@@ -209,35 +298,57 @@ public class IoTivityBridge extends AbstractBridge {
 		}
 		return responseMessage;
 	}
+	
+	private Message deviceRegistryInitialization(Message original) throws Exception {
+		try{
+		    Message deviceRegistryInitializeMessage = new Message();
+		    PlatformMessageMetadata metadata = createMessageMetadata(original, URIManagerMessageMetadata.MessageTypesEnum.DEVICE_REGISTRY_INITIALIZE, platform.getPlatformId());
+		    deviceRegistryInitializeMessage.setMetadata(metadata);
+		    deviceRegistryInitializeMessage.setPayload(new MessagePayload());
+		    publisher.publish(deviceRegistryInitializeMessage);
+		    logger.debug("Device_Registry_Initialize message has been published upstream.");
+		    original.getMetadata().setStatus("OK");
+		    return original;
+		}catch(Exception ex){
+		    return error(original);
+		}
+	}
 
 	@Override
+	//DONE
 	public Message platformCreateDevices(Message message) throws Exception {
 		logger.debug("platformCreateDevices() started.");
-		Message responseMessage = createResponseMessage(message);		
+		Message responseMessage = createResponseMessage(message);	
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
 		try{			
 			String body = translator.toFormatX(message.getPayload().getJenaModel());
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
-			iotivityClient.isPlatformRegistered();
+			
+			//get a map that contains all registered devices on the server
+			Map<String, JsonElement> deviceMap = iotivityClient.listDevices();
 
-			for (String entityId : entities) {					
+			for (String entityId : entities) {		
+				//check if there is already registered a device with the given id
 				String id = IoTivityUtils.getThingId(entityId);
-				String resourceURL = null;
-				try {
-					resourceURL = iotivityClient.findResourceURL(id, rootURL);
+				JsonElement deviceJsonElement = deviceMap.get(id);
+				if (deviceJsonElement != null) {
+					throw new Exception("There is already a device with given id : " + entityId);
 				}
-				catch (Exception ex) {};
-				if (resourceURL != null) {
-					return responseMessage;
-					//throw new Exception("There is already a device with given id : " + entityId);
-				}
+				
+				//create map that will be used as payload
 				Map<String, Object> map = IoTivityUtils.jsonToMap(body);
 				map.put("id", id);
-				//System.out.println(map);
-				resourceURL = IoTivityUtils.getDeviceURLByType((String) map.get("type"), rootURL);
-				map.remove("type");
-				resourceURL = "/a/devices/bloodpressure";
 				logger.debug("Registering thing {}...", id);
-				iotivityClient.createResource(map, resourceURL);
+				
+				//find uri
+				JsonElement result = iotivityClient.getResource("/oic/res?rt=oic.wk.res");
+				String resourceType = IoTivityUtils.findResourceTypeOfRequest(map);
+				String url = IoTivityUtils.findHrefByResourceType(result, resourceType);
+				
+				iotivityClient.createResource(map, url);
 	    		logger.debug("Success");
 			}
     	}catch(Exception e){
@@ -251,16 +362,27 @@ public class IoTivityBridge extends AbstractBridge {
 	@Override
 	public Message platformUpdateDevices(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
 		try{
 			String body = translator.toFormatX(message.getPayload().getJenaModel());
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
-			iotivityClient.isPlatformRegistered();
+			
+			//get a map that contains all registered devices on the server
+			Map<String, JsonElement> deviceMap = iotivityClient.listDevices();
 
 			for (String entityId : entities) {
 				String id = IoTivityUtils.getThingId(entityId);
-				String resource = iotivityClient.findResourceURL(id, rootURL);
-				logger.debug("Updating thing {}...", resource);
-				iotivityClient.editResource(IoTivityUtils.jsonToMap(body), resource);
+				JsonElement deviceJsonElement = deviceMap.get(id);
+				if (deviceJsonElement == null) {
+					throw new Exception("There is no device with given id : " + entityId);
+				}
+				String href = deviceJsonElement.getAsJsonObject().get("href").getAsString();
+				logger.debug("Updating thing {}...", href);
+				Map<String, Object> map = IoTivityUtils.jsonToMap(body);
+				iotivityClient.editResource(map, href);
 	    		logger.debug("Success");
 			}
     	}catch(Exception e){
@@ -272,16 +394,26 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
+	//DONE
 	public Message platformDeleteDevices(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
 		try {
-			iotivityClient.isPlatformRegistered();
 			logger.debug("Removing devices...");
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
+			Map<String, JsonElement> map = iotivityClient.listDevices();
 			for(String deviceId : entities){
 				String id = IoTivityUtils.getThingId(deviceId);
-				String resource = iotivityClient.findResourceURL(id, rootURL);
-				iotivityClient.deleteResource(resource);
+
+				JsonElement deviceJsonElement = map.get(id);
+				if (deviceJsonElement == null) {
+					throw new Exception("There is no device with id '"+id+"' to be deleted");
+				}
+				String deviceHref = IoTivityUtils.getHref(deviceJsonElement);
+				iotivityClient.deleteResource(deviceHref);
 				logger.debug("Device {} has been removed.", id);
 			}
 			responseMessage.getMetadata().setStatus("OK");
@@ -297,16 +429,28 @@ public class IoTivityBridge extends AbstractBridge {
 	@Override
 	public Message observe(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
+		if (iotivityClient == null) {
+			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
+			return responseMessage;
+		}	
 		try{
 			String body = translator.toFormatX(message.getPayload().getJenaModel());
 			Set<String> entities = IoTivityUtils.getDeviceIDsFromPayload(message);
 			iotivityClient.isPlatformRegistered();
+			
+			//get a map that contains all registered devices on the server
+			Map<String, JsonElement> deviceMap = iotivityClient.listDevices();
 
 			for (String entityId : entities) {
 				String id = IoTivityUtils.getThingId(entityId);
-				String resource = iotivityClient.findResourceURL(id, rootURL);
-				logger.debug("Updating thing {}...", resource);
-				iotivityClient.editResource(IoTivityUtils.jsonToMap(body), resource);
+				JsonElement deviceJsonElement = deviceMap.get(id);
+				if (deviceJsonElement == null) {
+					throw new Exception("There is no device with given id : " + entityId);
+				}
+				String href = deviceJsonElement.getAsJsonObject().get("href").getAsString();
+				logger.debug("Updating thing {}...", href);
+				Map<String, Object> map = IoTivityUtils.jsonToMap(body);
+				iotivityClient.editResource(map, href);
 	    		logger.debug("Success");
 			}
     	}catch(Exception e){
@@ -337,5 +481,25 @@ public class IoTivityBridge extends AbstractBridge {
 		Message responseMessage = createResponseMessage(message);
 		responseMessage.getMetadata().setStatus("OK");
 		return responseMessage;
+	}
+	
+	/**
+	 * Creates an exception that contains a message indicating that there is no registered platform
+	 */
+	private Exception getPlatformUnregisterException() {
+		return new Exception("There is no registered platform");
+	}
+	
+	/**
+	 * Creates a message metadata instance according to the given original request (the conversation id is retreived) and message type
+	 */
+	public static PlatformMessageMetadata createMessageMetadata(Message originalMessage, MessageTypesEnum messageType, String platformId) {
+	    PlatformMessageMetadata metadata = new MessageMetadata().asPlatformMessageMetadata();
+	    metadata.initializeMetadata();
+	    metadata.addMessageType(messageType);
+	    metadata.setSenderPlatformId(new EntityID(platformId));
+	    String conversationId = originalMessage.getMetadata().getConversationId().orElse(null);
+	    metadata.setConversationId(conversationId);
+	    return metadata;
 	}
 }
