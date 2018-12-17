@@ -90,7 +90,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	//DONE
 	public Message registerPlatform(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		try {
@@ -108,7 +107,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 	
 	@Override
-	//DONE
 	public Message updatePlatform(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		if (iotivityClient == null) {
@@ -133,7 +131,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	//DONE
 	public Message unregisterPlatform(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		String platformId = platform.getPlatformId();	
@@ -150,7 +147,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	//DONE
 	public Message subscribe(Message message) throws Exception {	
 		Message responseMessage = createResponseMessage(message);
 		if (iotivityClient == null) {
@@ -196,7 +192,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	//DONE
 	public Message unsubscribe(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);	
 		if (iotivityClient == null) {
@@ -275,7 +270,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	//DONE
 	public Message listDevices(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		if (iotivityClient == null) {
@@ -315,7 +309,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	//DONE
 	public Message platformCreateDevices(Message message) throws Exception {
 		logger.debug("platformCreateDevices() started.");
 		Message responseMessage = createResponseMessage(message);	
@@ -394,7 +387,6 @@ public class IoTivityBridge extends AbstractBridge {
 	}
 
 	@Override
-	//DONE
 	public Message platformDeleteDevices(Message message) throws Exception {
 		Message responseMessage = createResponseMessage(message);
 		if (iotivityClient == null) {

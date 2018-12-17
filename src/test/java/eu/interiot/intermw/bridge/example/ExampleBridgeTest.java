@@ -111,13 +111,13 @@ public class ExampleBridgeTest {
 //		assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.LIST_DEVICES));
 //		System.out.println("***************************************************************");
 
-		 // query
-		 System.out.println("QUERY");
-		 responseMsg = exampleBridge.query(createMessage("messages/query1.json"));
-		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-		 assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
-		 System.out.println("***************************************************************");
+//		 // query
+//		 System.out.println("QUERY");
+//		 responseMsg = exampleBridge.query(createMessage("messages/query1.json"));
+//		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+//		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+//		 assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
+//		 System.out.println("***************************************************************");
 		//
 		// //delete thing
 		// System.out.println("DELETE THING");
@@ -146,23 +146,23 @@ public class ExampleBridgeTest {
 		// assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_UPDATE_DEVICE));
 		// System.out.println("***************************************************************");
 
-//		 // subscribe to thing
-//		 System.out.println("SUBSCRIBE TO THING");
-//		 responseMsg =
-//		 exampleBridge.subscribe(createMessage("messages/thing-subscribe1.json"));
-//		 responseMsg =
-//		 exampleBridge.subscribe(createMessage("messages/thing-subscribe2.json"));
-//		 responseMsg =
-//		 exampleBridge.subscribe(createMessage("messages/thing-subscribe3.json"));
-//		 responseMsg =
-//		 exampleBridge.subscribe(createMessage("messages/thing-subscribe4.json"));
-//		 responseMsg =
-//		 exampleBridge.subscribe(createMessage("messages/thing-subscribe5.json"));
-//		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-//		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.SUBSCRIBE));
-//		 observe = true;
-//		 System.out.println("***************************************************************");
+		 // subscribe to thing
+		 System.out.println("SUBSCRIBE TO THING");
+		 responseMsg =
+		 exampleBridge.subscribe(createMessage("messages/thing-subscribe1.json"));
+		 responseMsg =
+		 exampleBridge.subscribe(createMessage("messages/thing-subscribe2.json"));
+		 responseMsg =
+		 exampleBridge.subscribe(createMessage("messages/thing-subscribe3.json"));
+		 responseMsg =
+		 exampleBridge.subscribe(createMessage("messages/thing-subscribe4.json"));
+		 responseMsg =
+		 exampleBridge.subscribe(createMessage("messages/thing-subscribe5.json"));
+		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.SUBSCRIBE));
+		 observe = true;
+		 System.out.println("***************************************************************");
 
 		// // unsubscribe from thing
 		// Thread.sleep(1000);

@@ -149,7 +149,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 		CoapResponse response = client.get();
 		if (response != null && response.getPayload() != null) {
 			JsonElement json = EncodingUtils.coapResponseToJson(response.getPayload());
-			System.out.println(json);
+			//System.out.println(json);
 			return json;
 		}
 		throw new Exception("Did not receive any data for the resource: " + resource);
@@ -348,7 +348,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 		for (JsonElement j :  responseList) {
 			try {
 				String resourceHref = j.getAsJsonObject().get("href").getAsString()+"?if=oic.if.ll";
-				System.out.println(resourceHref);
+				//System.out.println(resourceHref);
 				JsonElement device = getResource(resourceHref);
 				map.put(device.getAsJsonObject().get("id").getAsString(), device);
 			}

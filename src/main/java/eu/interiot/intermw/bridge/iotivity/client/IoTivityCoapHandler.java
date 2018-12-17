@@ -69,7 +69,8 @@ public class IoTivityCoapHandler implements CoapHandler {
 				logger.debug("Received observation from the platform.");
 				System.out.println("Received observation from the platform");
 				JsonElement responseJson = EncodingUtils.coapResponseToJson(response.getPayload());
-				System.out.println("---> " + responseJson);
+				logger.debug("---> " + responseJson);
+				//System.out.println("---> " + responseJson);
 				JsonParser parser = new JsonParser();
 				JsonObject observationObject = parser.parse(responseJson.toString()).getAsJsonObject();
 				Model translatedModel = translator.toJenaModel(observationObject.toString());

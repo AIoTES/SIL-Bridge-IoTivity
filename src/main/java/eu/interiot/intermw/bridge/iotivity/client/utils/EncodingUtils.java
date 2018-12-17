@@ -154,7 +154,6 @@ public class EncodingUtils {
 			handleMap(mapBuilder, entry.getValue(), entry.getKey());
 			return mapBuilder;
 		}
-		System.out.println(entry.getValue().getClass());
 		throw new Exception("Unsupported type of the value of key: " + entry.getKey() + " - " + entry.getValue());	
 	}
 	
