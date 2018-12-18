@@ -149,7 +149,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 		CoapResponse response = client.get();
 		if (response != null && response.getPayload() != null) {
 			JsonElement json = EncodingUtils.coapResponseToJson(response.getPayload());
-			//System.out.println(json);
+			System.out.println(json);
 			return json;
 		}
 		throw new Exception("Did not receive any data for the resource: " + resource);

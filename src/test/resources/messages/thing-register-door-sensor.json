@@ -23,7 +23,7 @@
     	"temperature" : 25 ,
     	"temperatureUnits" : "C"
   	 },  {
-    	"@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test#11",
+    	"@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test11",
     	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Device", "http://inter-iot.eu/syntax/Iotivity.owl#FibaroDoorDevice" ],
     	"hasResource" : [ "_:b0", "_:b1" ]
     	

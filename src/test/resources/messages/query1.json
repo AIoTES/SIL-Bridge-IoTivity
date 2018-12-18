@@ -14,7 +14,7 @@
     "@id" : "InterIoTMsg:metadata"
   }, {
     "@graph" : [ {
-      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test#3",
+      "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test3",
       "@type" : "http://inter-iot.eu/syntax/Iotivity.owl#Device"
     } ],
     "@id" : "InterIoTMsg:payload"

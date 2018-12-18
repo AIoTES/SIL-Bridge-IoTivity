@@ -27,7 +27,7 @@
     	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Resource", "http://inter-iot.eu/syntax/Iotivity.owl#IlluminanceSensor" ],
     	"illuminance" : "67"
   	 }, {
-    	"@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test#3",
+    	"@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test3",
     	"@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Device", "http://inter-iot.eu/syntax/Iotivity.owl#FibaroMotionDevice" ],
     	"hasResource" : [ "_:b0" , "_:b1" , "_:b2" ]
     	
