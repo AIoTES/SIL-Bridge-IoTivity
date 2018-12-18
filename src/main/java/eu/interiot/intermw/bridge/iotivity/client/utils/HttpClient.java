@@ -5,8 +5,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import eu.interiot.intermw.bridge.iotivity.IoTivityBridge;
 
 /**
  * 
@@ -14,6 +19,9 @@ import com.google.gson.JsonParser;
  *
  */
 public class HttpClient {
+	
+	private static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
+
 
 	/**
 	 * When the IoTivity server initializes, it uses a random assigned port. 
@@ -29,6 +37,7 @@ public class HttpClient {
 	 */
 	public static int getPort(String proxyIP, String iotivityServerIP) throws Exception {
 		String url =  "http://"+ proxyIP +":8080/DiscoverPort-0.0.1-SNAPSHOT/service?ip=" + iotivityServerIP;
+		logger.debug("Getting port from: {}...", url);
 		String result = sendGet(url);
 		JsonObject json = new JsonParser().parse(result).getAsJsonObject();
 		return Integer.parseInt(json.get("port").getAsString());

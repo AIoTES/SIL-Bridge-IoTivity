@@ -71,6 +71,7 @@ public class ExampleBridgeTest {
 				.iterator().next();
 		Platform platform = new Platform();
 		platform.setPlatformId(platformId.toString());
+		platform.setBaseEndpoint(new URL("http://160.40.48.40"));
 		// platformId.toString(), platformRegisterMsg.getPayload()
 
 		IoTivityBridge exampleBridge = new IoTivityBridge(bridgeConfiguration, platform);

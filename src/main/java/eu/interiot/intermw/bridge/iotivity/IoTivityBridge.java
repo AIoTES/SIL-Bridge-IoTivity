@@ -59,8 +59,8 @@ public class IoTivityBridge extends AbstractBridge {
 
 	private final Logger logger = LoggerFactory.getLogger(IoTivityBridge.class);
 	private IotivityTranslator translator = new IotivityTranslator();
-	private BridgeConfiguration configuration;
     private String url;
+    private String proxyIp;
 	private IoTivityClient iotivityClient = null;
 	private DeviceCheckScheduler scheduler = null;
 
@@ -73,19 +73,18 @@ public class IoTivityBridge extends AbstractBridge {
 	    if (Strings.isNullOrEmpty(url)) {
 	    	url = configuration.getProperties().getProperty(IoTivityProperty.SERVER_IP);
 	    }
-		String proxyIp = configuration.getProperties().getProperty(IoTivityProperty.PROXY_IP);
+		proxyIp = configuration.getProperties().getProperty(IoTivityProperty.PROXY_IP);
 		String iotivityServerPort = configuration.getProperties().getProperty(IoTivityProperty.SERVER_PORT);
         if (Strings.isNullOrEmpty(url)) {
             throw new MiddlewareException("Invalid bridge configuration: property '"+IoTivityProperty.SERVER_IP+"' is not set.");
         }
         if (Strings.isNullOrEmpty(proxyIp) && Strings.isNullOrEmpty(iotivityServerPort)) {
-        	proxyIp = url;
+        	proxyIp = url.replace("http://", "");;
             //throw new MiddlewareException("Invalid bridge configuration: define '"+IoTivityProperty.PROXY_IP+"' or '"+IoTivityProperty.SERVER_PORT+"'.");
         }
         if (!Strings.isNullOrEmpty(iotivityServerPort) && !iotivityServerPort.isEmpty()) {
 			Integer.parseInt(iotivityServerPort);
 		}
-		this.configuration = configuration;
 		logger.info("Bridge has been initialized successfully.");
 	}
 
@@ -94,7 +93,7 @@ public class IoTivityBridge extends AbstractBridge {
 		Message responseMessage = createResponseMessage(message);
 		try {
 			logger.debug("Registering platform {}...", platform.getPlatformId());
-			iotivityClient  = new IoTivityCoapClientImpl(url, configuration);			
+			iotivityClient  = new IoTivityCoapClientImpl(url, proxyIp, null);			
 			updatePlatform(message.getPayload());
 			iotivityClient.discoverServer();
 			logger.debug("Platform {} has been registered.", platform.getPlatformId());
