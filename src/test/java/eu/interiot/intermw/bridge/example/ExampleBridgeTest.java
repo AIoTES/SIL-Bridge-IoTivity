@@ -56,6 +56,7 @@ public class ExampleBridgeTest {
 
 	@Test
 	public void testBridge() throws Exception {
+
 		// Configuration configuration = new
 		// DefaultConfiguration("*.bridge.properties");
 		Configuration intermwConfig = new DefaultConfiguration(GLOBAL_CONFIG_FILE);

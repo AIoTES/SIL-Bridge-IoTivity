@@ -30,7 +30,7 @@ public class OntologyHandler {
 	
 	private OntModel model;
 	//private static final String ONTOLOGY_FILENAME = "./src/main/resources/ontology/iotivity data model.owl";
-	private static final String ONTOLOGY_FILENAME = "ontology/iotivity_data_model.owl";
+	private static final String ONTOLOGY_FILENAME = "/ontology/iotivity_data_model.owl";
 	public static final String IOTIVITY_PREFIX = "http://inter-iot.eu/syntax/Iotivity.owl#";
 	public static final String RESOURCE_TYPE = "rt";
 	private static OntologyHandler instance = new OntologyHandler();
@@ -57,10 +57,14 @@ public class OntologyHandler {
 	 */
 	public void loadOntology() throws Exception {
 		System.out.println("LOAD ONTOLOGY");
-		ClassLoader classLoader = getClass().getClassLoader();
-		File file = new File(classLoader.getResource(ONTOLOGY_FILENAME).getFile());
+//		ClassLoader classLoader = getClass().getClassLoader();
+//		File file = new File(classLoader.getResource(ONTOLOGY_FILENAME).getFile());
 		//File file = new File(ONTOLOGY_FILENAME);
-		readOntologyModel(file);
+		//readOntologyModel(file);
+		model = ModelFactory.createOntologyModel();
+		InputStream in = getClass().getResourceAsStream(ONTOLOGY_FILENAME);
+		System.out.println(in);
+		model = (OntModel) model.read(in, null, "RDF/XML");
 	}
 	
 	private void initializeStructures() {
