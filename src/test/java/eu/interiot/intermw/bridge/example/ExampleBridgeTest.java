@@ -20,7 +20,6 @@ import eu.interiot.intermw.bridge.iotivity.IoTivityBridge;
 import eu.interiot.intermw.commons.DefaultConfiguration;
 import eu.interiot.intermw.commons.interfaces.Configuration;
 import eu.interiot.intermw.commons.model.Platform;
-import eu.interiot.intermw.ontology.OntologyHandler;
 import eu.interiot.message.ID.EntityID;
 import eu.interiot.message.exceptions.MessageException;
 import eu.interiot.message.Message;
@@ -113,13 +112,13 @@ public class ExampleBridgeTest {
 //		assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.LIST_DEVICES));
 //		System.out.println("***************************************************************");
 
-		 // query
-		 System.out.println("QUERY");
-		 responseMsg = exampleBridge.query(createMessage("messages/query1.json"));
-		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-		 assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
-		 System.out.println("***************************************************************");
+//		 // query
+//		 System.out.println("QUERY");
+//		 responseMsg = exampleBridge.query(createMessage("messages/query1.json"));
+//		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+//		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+//		 assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
+//		 System.out.println("***************************************************************");
 		//
 		// //delete thing
 		// System.out.println("DELETE THING");

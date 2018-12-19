@@ -156,36 +156,33 @@ public class IoTivityBridge extends AbstractBridge {
 		
 		if (entities.isEmpty()) {
 			throw new PayloadException("No entities of type Device found in the Payload.");
-		} else if (entities.size() > 1) {
-			throw new PayloadException("Only one device is supported by Subscribe operation.");
 		}
-
-		String thingId = entities.iterator().next();
+		
+		iotivityClient.isPlatformRegistered();
 		String conversationId = message.getMetadata().getConversationId().orElse(null);
-
-		logger.debug("Subscribing to thing {} using conversationId {}...", thingId, conversationId);
 		Map<String, JsonElement> deviceMap = iotivityClient.listDevices();
-
-		try {
-			iotivityClient.isPlatformRegistered();
-			PlatformMessageMetadata metadata = new MessageMetadata().asPlatformMessageMetadata();
-			metadata.initializeMetadata();
-			metadata.addMessageType(URIManagerMessageMetadata.MessageTypesEnum.OBSERVATION);
-			metadata.addMessageType(URIManagerMessageMetadata.MessageTypesEnum.RESPONSE);
-			metadata.setSenderPlatformId(new EntityID(platform.getPlatformId()));
-			metadata.setConversationId(conversationId);
-
-			CoapHandler handler = new IoTivityCoapHandler(metadata, translator, publisher);
-			String id = IoTivityUtils.getThingId(thingId);
-			JsonElement deviceJsonElement = deviceMap.get(id);
-			if (deviceJsonElement == null) {
-				throw new Exception("There is no device with id '"+id+"' to sunscribe to");
+		for (String thingId : entities) {
+			logger.debug("Subscribing to thing {} using conversationId {}...", thingId, conversationId);	
+			try {
+				PlatformMessageMetadata metadata = new MessageMetadata().asPlatformMessageMetadata();
+				metadata.initializeMetadata();
+				metadata.addMessageType(URIManagerMessageMetadata.MessageTypesEnum.OBSERVATION);
+				metadata.addMessageType(URIManagerMessageMetadata.MessageTypesEnum.RESPONSE);
+				metadata.setSenderPlatformId(new EntityID(platform.getPlatformId()));
+				metadata.setConversationId(conversationId);
+	
+				CoapHandler handler = new IoTivityCoapHandler(metadata, translator, publisher);
+				String id = IoTivityUtils.getThingId(thingId);
+				JsonElement deviceJsonElement = deviceMap.get(id);
+				if (deviceJsonElement == null) {
+					throw new Exception("There is no device with id '"+id+"' to sunscribe to");
+				}
+				String href = deviceJsonElement.getAsJsonObject().get("href").getAsString();
+				iotivityClient.observeResource(href, handler);
+			} catch (Exception e) {
+				logger.error("Error subscribing: " + e.getMessage());
+				IoTivityUtils.createErrorResponseMessage(responseMessage, e);
 			}
-			String href = deviceJsonElement.getAsJsonObject().get("href").getAsString();
-			iotivityClient.observeResource(href, handler);
-		} catch (Exception e) {
-			logger.error("Error subscribing: " + e.getMessage());
-			IoTivityUtils.createErrorResponseMessage(responseMessage, e);
 		}
 		return responseMessage;
 	}
