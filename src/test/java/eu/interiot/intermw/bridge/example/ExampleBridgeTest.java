@@ -113,13 +113,13 @@ public class ExampleBridgeTest {
 //		assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.LIST_DEVICES));
 //		System.out.println("***************************************************************");
 
-//		 // query
-//		 System.out.println("QUERY");
-//		 responseMsg = exampleBridge.query(createMessage("messages/query1.json"));
-//		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-//		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//		 assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
-//		 System.out.println("***************************************************************");
+		 // query
+		 System.out.println("QUERY");
+		 responseMsg = exampleBridge.query(createMessage("messages/query1.json"));
+		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+		 assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.QUERY));
+		 System.out.println("***************************************************************");
 		//
 		// //delete thing
 		// System.out.println("DELETE THING");
@@ -168,13 +168,13 @@ public class ExampleBridgeTest {
 
 		// // unsubscribe from thing
 		// Thread.sleep(1000);
-		// System.out.println("UNSUBSCRIBE FROM THING");
-		// responseMsg =
-		// exampleBridge.unsubscribe(createMessage("messages/thing-unsubscribe.json"));
-		// messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-		// assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-		// assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.UNSUBSCRIBE));
-		// System.out.println("***************************************************************");
+//		 System.out.println("UNSUBSCRIBE FROM THING");
+//		 responseMsg =
+//		 exampleBridge.unsubscribe(createMessage("messages/thing-unsubscribe.json"));
+//		 messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+//		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+//		 assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.UNSUBSCRIBE));
+//		 System.out.println("***************************************************************");
 
 		// //observe
 		// System.out.println("OBSERVE");

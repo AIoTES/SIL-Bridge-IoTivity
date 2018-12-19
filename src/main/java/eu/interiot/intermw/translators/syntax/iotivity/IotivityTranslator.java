@@ -59,6 +59,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 
+import eu.interiot.intermw.bridge.iotivity.IoTivityUtils;
 import eu.interiot.intermw.ontology.OntologyHandler;
 import eu.interiot.intermw.ontology.entities.Device;
 import eu.interiot.translators.syntax.IllegalSyntaxException;
@@ -411,8 +412,8 @@ public class IotivityTranslator extends SyntacticTranslator<String> {
 						Device d = OntologyHandler.gi().findDeviceByResourceType(rt);
 						uri = d.getUri();
 						objectResource.addProperty(RDF.type, uri);
-						
 					}
+					objectResource.addProperty(RDF.type, IoTivityUtils.AiotesEntityTypeDevice);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

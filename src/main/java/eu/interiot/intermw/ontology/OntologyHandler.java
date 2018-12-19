@@ -16,6 +16,7 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
+import eu.interiot.intermw.bridge.iotivity.IoTivityUtils;
 import eu.interiot.intermw.ontology.entities.Device;
 import eu.interiot.intermw.ontology.entities.Resource;
 /**
@@ -83,6 +84,7 @@ public class OntologyHandler {
 		for (OntClass cl : allDevices) {
 			set.add(cl.getURI());
 		}
+		set.add(IoTivityUtils.AiotesEntityTypeDevice);
 		return set;
 	}
 	

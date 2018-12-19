@@ -65,6 +65,8 @@ public class IoTivityUtils {
 	public static final String EntityTypeInstance = IotivityTranslator.iotivityBaseURI + "Instance";
 	public static final String EntityTypePlatform = URIsosa + "Platform";
 	public static final String EntityTypeDevice = "http://inter-iot.eu/syntax/Iotivity.owl#Device";
+	public static final String AiotesEntityTypeDevice = "http://inter-iot.eu/GOIoTP#IoTDevice";
+
 	
 	/**
 	 * Retrieves the id of the given {@code platform}
@@ -136,7 +138,9 @@ public class IoTivityUtils {
 	 * @return a set of device ids
 	 */
 	public static Set<String> getDeviceIDsFromPayload(Message message) {
-		return getEntityIDsFromPayload(message.getPayload(), EntityTypeDevice);
+		Set<String> entityIDs = getEntityIDsFromPayload(message.getPayload(), EntityTypeDevice);
+		entityIDs.addAll(getEntityIDsFromPayload(message.getPayload(), AiotesEntityTypeDevice));
+		return entityIDs;
 	}
 	
 	/**

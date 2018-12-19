@@ -15,7 +15,7 @@
   }, {
     "@graph" : [ {
       "@id" : "http://inter-iot.eu/syntax/Iotivity#Instance/test6",
-      "@type" : [ "http://inter-iot.eu/syntax/Iotivity.owl#Device", "http://inter-iot.eu/syntax/Iotivity.owl#FibaroDoorDevice" ],
+      "@type" : "http://inter-iot.eu/GOIoTP#IoTDevice",
       "http://www.w3.org/ns/sosa/isHostedBy" : {
         "@id" : "InterIoT:IoTivity"
       }
