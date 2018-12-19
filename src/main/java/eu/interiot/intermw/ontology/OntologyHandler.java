@@ -28,7 +28,8 @@ import eu.interiot.intermw.ontology.entities.Resource;
 public class OntologyHandler {
 	
 	private OntModel model;
-	private static final String ONTOLOGY_FILENAME = "./src/main/resources/ontology/iotivity data model.owl";
+	//private static final String ONTOLOGY_FILENAME = "./src/main/resources/ontology/iotivity data model.owl";
+	private static final String ONTOLOGY_FILENAME = "ontology/iotivity_data_model.owl";
 	public static final String IOTIVITY_PREFIX = "http://inter-iot.eu/syntax/Iotivity.owl#";
 	public static final String RESOURCE_TYPE = "rt";
 	private static OntologyHandler instance = new OntologyHandler();
@@ -54,7 +55,10 @@ public class OntologyHandler {
 	 * @throws Exception
 	 */
 	public void loadOntology() throws Exception {
-		File file = new File(ONTOLOGY_FILENAME);
+		System.out.println("LOAD ONTOLOGY");
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		File file = new File(classLoader.getResource(ONTOLOGY_FILENAME).getFile());
+		//File file = new File(ONTOLOGY_FILENAME);
 		readOntologyModel(file);
 	}
 	
