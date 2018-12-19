@@ -57,7 +57,7 @@ public class OntologyHandler {
 	 */
 	public void loadOntology() throws Exception {
 		System.out.println("LOAD ONTOLOGY");
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		ClassLoader classLoader = getClass().getClassLoader();
 		File file = new File(classLoader.getResource(ONTOLOGY_FILENAME).getFile());
 		//File file = new File(ONTOLOGY_FILENAME);
 		readOntologyModel(file);

@@ -20,6 +20,7 @@ import eu.interiot.intermw.bridge.iotivity.IoTivityBridge;
 import eu.interiot.intermw.commons.DefaultConfiguration;
 import eu.interiot.intermw.commons.interfaces.Configuration;
 import eu.interiot.intermw.commons.model.Platform;
+import eu.interiot.intermw.ontology.OntologyHandler;
 import eu.interiot.message.ID.EntityID;
 import eu.interiot.message.exceptions.MessageException;
 import eu.interiot.message.Message;
@@ -56,7 +57,6 @@ public class ExampleBridgeTest {
 
 	@Test
 	public void testBridge() throws Exception {
-		
 		// Configuration configuration = new
 		// DefaultConfiguration("*.bridge.properties");
 		Configuration intermwConfig = new DefaultConfiguration(GLOBAL_CONFIG_FILE);
