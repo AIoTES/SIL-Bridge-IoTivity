@@ -49,7 +49,6 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +93,6 @@ public class IoTivityBridge extends AbstractBridge {
 		try {
 			logger.debug("Registering platform {}...", platform.getPlatformId());
 			iotivityClient  = new IoTivityCoapClientImpl(url, proxyIp, null);			
-			updatePlatform(message.getPayload());
 			iotivityClient.discoverServer();
 			logger.debug("Platform {} has been registered.", platform.getPlatformId());
 		} catch (Exception e) {
@@ -112,21 +110,12 @@ public class IoTivityBridge extends AbstractBridge {
 			IoTivityUtils.createErrorResponseMessage(responseMessage, getPlatformUnregisterException());
 			return responseMessage;
 		}
-		updatePlatform(message.getPayload());
-		return responseMessage;
-	}
-	
-	/**
-	 * Method that parses the given payload, updates the platform instance and the iotivity client
-	 * @param messagePayload
-	 * @throws MalformedURLException
-	 */
-	private void updatePlatform(MessagePayload messagePayload) throws MalformedURLException {
-		platform = IoTivityUtils.updatePlatform(platform, messagePayload);
+		platform = IoTivityUtils.updatePlatform(platform, message.getPayload());
 		if (platform.getBaseEndpoint() != null) {
 			url = platform.getBaseEndpoint().toString();
 		}
 		iotivityClient.setIp(url);
+		return responseMessage;
 	}
 
 	@Override
