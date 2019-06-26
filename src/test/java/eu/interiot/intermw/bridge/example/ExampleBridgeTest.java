@@ -41,7 +41,7 @@ public class ExampleBridgeTest {
 	private ExamplePlatformEmulator platformEmulator;
 	private static final String SELECTED_PLATFORM_ID = "http://inter-iot.eu/platforms/IoTivity";
 	private static final String GLOBAL_CONFIG_FILE = "intermw.properties";
-	private static final String BRIDGE_INSTANCE_CONFIG_FILE = "iotivity.properties";
+	private static final String BRIDGE_INSTANCE_CONFIG_FILE = "IoTivityBridge.properties";
 
 	@Before
 	public void setUp() throws Exception {
@@ -105,13 +105,13 @@ public class ExampleBridgeTest {
 //		assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.PLATFORM_UPDATE));
 //		System.out.println("***************************************************************");
 
-//		// list devices
-//		System.out.println("LIST DEVICES");
-//		responseMsg = exampleBridge.listDevices(createMessage("messages/list-devices.json"));
-//		messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
-//		assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
-//		assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.LIST_DEVICES));
-//		System.out.println("***************************************************************");
+		// list devices
+		System.out.println("LIST DEVICES");
+		responseMsg = exampleBridge.listDevices(createMessage("messages/list-devices.json"));
+		messageTypesEnumSet = responseMsg.getMetadata().getMessageTypes();
+		assertTrue(messageTypesEnumSet.contains(MessageTypesEnum.RESPONSE));
+		assertTrue(messageTypesEnumSet.contains(URIManagerMessageMetadata.MessageTypesEnum.LIST_DEVICES));
+		System.out.println("***************************************************************");
 
 //		 // query
 //		 System.out.println("QUERY");
@@ -203,9 +203,9 @@ public class ExampleBridgeTest {
 		//
 		// thread.start();
 		//
-		if (observe) {
-			waitForObervationMessage(publisher, 100000);
-		}
+//		if (observe) {
+//			waitForObervationMessage(publisher, 100000);
+//		}
 
 	}
 
