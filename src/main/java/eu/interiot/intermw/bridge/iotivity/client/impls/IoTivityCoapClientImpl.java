@@ -1,7 +1,7 @@
 /**
  * ACTIVAGE. ACTivating InnoVative IoT smart living environments for AGEing well.
  * ACTIVAGE is a R&D project which has received funding from the European 
- * Union’s Horizon 2020 research and innovation programme under grant 
+ * Union's Horizon 2020 research and innovation programme under grant 
  * agreement No 732679.
  * 
  * Copyright (C) 2016-2018, by (Author's company of this file):
@@ -165,8 +165,7 @@ public class IoTivityCoapClientImpl implements IoTivityClient{
 	public JsonElement discoverServer() throws Exception{
 		CoapClient client = createCoapClient(createDiscoveryURL());
 		if (JAVA_VERSION < 1.8) {			
-			CoapResponse response = client.discoverPort();
-			port = response.advanced().getSourcePort();
+
 		}
 		else {
 			if (hardCodedPort != 0) {

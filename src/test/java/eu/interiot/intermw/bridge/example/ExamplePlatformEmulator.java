@@ -3,7 +3,7 @@ package eu.interiot.intermw.bridge.example;
 /**
  * INTER-IoT. Interoperability of IoT Platforms.
  * INTER-IoT is a R&D project which has received funding from the European
- * Union’s Horizon 2020 research and innovation programme under grant
+ * Union's Horizon 2020 research and innovation programme under grant
  * agreement No 687283.
  * <p>
  * Copyright (C) 2016-2018, by (Author's company of this file):
