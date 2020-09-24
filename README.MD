@@ -109,4 +109,4 @@ Tests are provided with the bridge code, in ``src/test`` folder. These tests can
 
 ## License
 
-Copyright, by CERTH/ITI, http://www.iti.gr . Licensed under the  Eclipse Public License v1.0.
+Apache 2.0
