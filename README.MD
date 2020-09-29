@@ -110,3 +110,4 @@ Tests are provided with the bridge code, in ``src/test`` folder. These tests can
 ## License
 
 Apache 2.0
+(C) CERTH/ITI Visual Analytics Lab, 2020 
